@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>CutTrack · Body Fat & Fat Loss</title>
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <!-- Chart.js (lightweight) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+    body {
+      background: #0a0a0f;
+      color: #eaeef2;
+      padding: 0 0 80px;
+      min-height: 100vh;
+    }
+    /* dark theme with orange/gold accent */
+    :root {
+      --accent: #f5a623;
+      --accent-dim: #b87c1a;
+      --bg-card: #15171e;
+      --bg-elev: #1e212a;
+      --text-muted: #9aa3af;
+      --border: #2a2e3a;
+      --success: #2ecc71;
+      --warning: #e67e22;
+      --danger: #e74c3c;
+      --purple-grad: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    }
+    .app {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px 14px 90px;
+    }
+    h1, h2, h3 {
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    h1 {
+      font-size: 1.75rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+    }
+    h1 span {
+      color: var(--accent);
+    }
+    h2 {
+      font-size: 1.3rem;
+      margin: 16px 0 10px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h3 {
+      font-size: 1.05rem;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .card {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 18px 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .stat {
+      background: var(--bg-elev);
+      border-radius: 16px;
+      padding: 14px 10px;
+      text-align: center;
+      border: 1px solid #2f3541;
+    }
+    .stat .label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+    .stat .value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .stat .unit {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+    .badge {
+      background: var(--accent);
+      color: #0a0a0f;
+      border-radius: 40px;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .warning-banner {
+      background: #3d2a1a;
+      border-left: 5px solid var(--warning);
+      color: #fadcb0;
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin: 12px 0;
+      font-size: 0.9rem;
+    }
+    .btn {
+      background: var(--accent);
+      color: #0a0a0f;
+      border: none;
+      border-radius: 60px;
+      padding: 14px 20px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid transparent;
+    }
+    .btn:active {
+      transform: scale(0.97);
+      opacity: 0.9;
+    }
+    .btn.secondary {
+      background: transparent;
+      border: 1.5px solid var(--accent);
+      color: var(--accent);
+    }
+    .btn.purple {
+      background: var(--purple-grad);
+      color: #fff;
+      border: none;
+    }
+    .btn.small {
+      padding: 8px 16px;
+      font-size: 0.85rem;
+    }
+    .btn.block {
+      width: 100%;
+    }
+    .btn.danger {
+      background: #3a1e1e;
+      color: #e74c3c;
+      border: 1px solid #5a2a2a;
+    }
+    .input-group {
+      margin: 14px 0;
+    }
+    .input-group label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    input, select, textarea {
+      width: 100%;
+      background: #1e212a;
+      border: 1px solid #2f3541;
+      border-radius: 14px;
+      padding: 14px 16px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.15s;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+    .flex-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .habit-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .habit-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-elev);
+      padding: 12px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: background 0.1s;
+      border: 1px solid #2a2e3a;
+    }
+    .habit-item.done {
+      background: #1e3a2a;
+      border-color: #2ecc71;
+    }
+    .habit-check {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid #4a4f5c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #0a0a0f;
+      flex-shrink: 0;
+    }
+    .habit-item.done .habit-check {
+      background: var(--success);
+      border-color: var(--success);
+      color: #0a0a0f;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #2a2e3a;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 20px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .meal-card {
+      background: var(--bg-elev);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 10px;
+      border: 1px solid #2a2e3a;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .meal-card.eaten {
+      border-color: var(--success);
+      background: #1a2a1f;
+      opacity: 0.9;
+    }
+    .meal-title {
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+    }
+    .meal-macros {
+      display: flex;
+      gap: 12px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .meal-desc {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      margin: 6px 0 0;
+    }
+    .variant-slider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 0;
+    }
+    .variant-slider input[type="range"] {
+      flex: 1;
+      padding: 0;
+      height: 8px;
+      background: #2a2e3a;
+      -webkit-appearance: none;
+      border-radius: 10px;
+    }
+    .variant-slider input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 26px;
+      height: 26px;
+      background: var(--accent);
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      cursor: pointer;
+    }
+    .cal-badge {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 1.3rem;
+      min-width: 100px;
+      text-align: center;
+    }
+    .snap-preview {
+      max-width: 100%;
+      border-radius: 16px;
+      margin: 10px 0;
+      border: 1px solid #2a2e3a;
+      max-height: 220px;
+      object-fit: cover;
+      width: 100%;
+    }
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #0f1117;
+      border-top: 1px solid #1f232e;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 6px 12px;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.7rem;
+      color: #6b7280;
+      gap: 2px;
+      padding: 6px 10px;
+      border-radius: 40px;
+      transition: all 0.1s;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      font-weight: 500;
+    }
+    .tab-item.active {
+      color: var(--accent);
+    }
+    .tab-item .icon {
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+    .flash {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e212a;
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 60px;
+      font-weight: 600;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.8);
+      border: 1px solid var(--accent);
+      z-index: 2000;
+      animation: slideDown 0.25s ease;
+      white-space: nowrap;
+      max-width: 90vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    .hidden { display: none !important; }
+    .text-muted { color: var(--text-muted); }
+    .text-small { font-size: 0.8rem; }
+    .mt-2 { margin-top: 8px; }
+    .mt-3 { margin-top: 14px; }
+    .mb-2 { margin-bottom: 8px; }
+    .gap-2 { gap: 8px; }
+    .shopping-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #222630;
+      font-size: 0.9rem;
+    }
+    .honesty-note {
+      background: #1f1a0e;
+      border-left: 4px solid var(--warning);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      color: #e0c9a0;
+      margin-top: 12px;
+    }
+    canvas { max-width: 100%; }
+    .log-entry {
+      padding: 10px 0;
+      border-bottom: 1px solid #222630;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- Flash container -->
+    <div id="flashContainer"></div>
+
+    <!-- ==================== TODAY TAB ==================== -->
+    <div id="tab-today" class="tab-panel">
+      <h1>Cut<span>Track</span> <span style="font-size:0.9rem;font-weight:400;color:var(--text-muted);">· today</span></h1>
+      
+      <!-- Weight input + target -->
+      <div class="card">
+        <div class="flex-between">
+          <h3>☀️ Morning weight</h3>
+          <span class="badge" id="todayDateLabel">—</span>
+        </div>
+        <div class="flex-row mt-2">
+          <input type="number" id="morningWeight" step="0.1" placeholder="kg" style="flex:2;" value="80.0">
+          <button class="btn small" id="saveWeightBtn">Save</button>
+        </div>
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="label">Target calories</div>
+            <div class="value" id="targetCalories">—</div>
+            <div class="unit">kcal</div>
+          </div>
+          <div class="stat">
+            <div class="label">Protein target</div>
+            <div class="value" id="targetProtein">—</div>
+            <div class="unit">g</div>
+          </div>
+        </div>
+        <div id="calorieWarning" class="warning-banner hidden"></div>
+        <div class="flex-between mt-2 text-small">
+          <span class="text-muted">Weekly projection</span>
+          <span><strong id="weeklyLoss">0.70</strong> kg/week</span>
+        </div>
+      </div>
+
+      <!-- Habit checklist -->
+      <div class="card">
+        <h3>✅ Habits</h3>
+        <div class="habit-list" id="habitList">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- Meal progress -->
+      <div class="card">
+        <div class="flex-between">
+          <h3>🍽️ Meals today</h3>
+          <span class="text-muted text-small" id="mealProgressText">0/4 eaten</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="mealProgressBar" style="width:0%"></div>
+        </div>
+        <div id="todayMealsPreview" class="text-small text-muted mt-2"></div>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="card">
+        <h3>📊 Quick stats</h3>
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="label">7-day avg weight</div>
+            <div class="value" id="rollingAvg">—</div>
+            <div class="unit">kg</div>
+          </div>
+          <div class="stat">
+            <div class="label">Body fat (Navy)</div>
+            <div class="value" id="bodyFatDisplay">—</div>
+            <div class="unit">%</div>
+          </div>
+        </div>
+        <div class="flex-row mt-2">
+          <input type="number" id="waistInput" placeholder="Waist cm" step="0.5" style="flex:1;">
+          <input type="number" id="neckInput" placeholder="Neck cm" step="0.5" style="flex:1;">
+          <button class="btn small secondary" id="calcBodyFatBtn">Calculate BF%</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MEAL PLAN TAB ==================== -->
+    <div id="tab-mealplan" class="tab-panel hidden">
+      <h2>🍱 Meal Plan</h2>
+      <div class="card">
+        <button class="btn purple block" id="generatePlanBtn">✨ Generate Plan with DeepSeek</button>
+        <p class="text-muted text-small mt-2">AI creates a plan based on your target calories & protein.</p>
+      </div>
+      <div id="mealPlanContainer">
+        <!-- filled by JS -->
+      </div>
+      <div class="card" id="regenerateCard" style="display:none;">
+        <button class="btn secondary block" id="regeneratePlanBtn">🔄 Regenerate plan</button>
+      </div>
+    </div>
+
+    <!-- ==================== SNAP TAB ==================== -->
+    <div id="tab-snap" class="tab-panel hidden">
+      <h2>📸 Snap a dish</h2>
+      <div class="card">
+        <input type="file" id="snapInput" accept="image/*" capture="environment" style="display:none;">
+        <button class="btn block" id="snapBtn">📷 Take / Upload photo</button>
+        <img id="snapPreview" class="snap-preview hidden" alt="preview">
+        <button class="btn purple block mt-2 hidden" id="analyzeDishBtn">✨ Identify & generate recipes</button>
+      </div>
+      <div id="snapResultContainer"></div>
+    </div>
+
+    <!-- ==================== PROGRESS TAB ==================== -->
+    <div id="tab-progress" class="tab-panel hidden">
+      <h2>📈 Progress</h2>
+      <div class="card">
+        <canvas id="weightChart" height="180"></canvas>
+      </div>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="label">7-day avg</div>
+          <div class="value" id="progressRollingAvg">—</div>
+          <div class="unit">kg</div>
+        </div>
+        <div class="stat">
+          <div class="label">Total lost</div>
+          <div class="value" id="totalLost">—</div>
+          <div class="unit">kg</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Weekly trend</h3>
+        <div id="weeklyTrend" class="text-muted">Last 7 vs previous 7 days</div>
+      </div>
+      <div class="card">
+        <h3>Body fat % (US Navy)</h3>
+        <div id="bodyFatProgress" class="text-muted">—</div>
+      </div>
+    </div>
+
+    <!-- ==================== LOG TAB ==================== -->
+    <div id="tab-log" class="tab-panel hidden">
+      <h2>📋 Recent entries</h2>
+      <div class="card">
+        <h3>Recent weigh-ins</h3>
+        <div id="recentWeighins"></div>
+      </div>
+      <div class="card">
+        <h3>Habit history</h3>
+        <div id="habitHistory"></div>
+      </div>
+      <div class="card">
+        <h3>Shopping list</h3>
+        <div id="shoppingListContainer"></div>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab-item active" data-tab="today"><span class="icon">☀️</span>Today</button>
+      <button class="tab-item" data-tab="mealplan"><span class="icon">🍱</span>Meal Plan</button>
+      <button class="tab-item" data-tab="snap"><span class="icon">📸</span>Snap</button>
+      <button class="tab-item" data-tab="progress"><span class="icon">📈</span>Progress</button>
+      <button class="tab-item" data-tab="log"><span class="icon">📋</span>Log</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ---------- FIREBASE ----------
+      const firebaseConfig = {
+        apiKey: "AIzaSyDjn72V5G3hyPoBlfzWm3N_PlgBowV8OXw",
+        authDomain: "cookbook-bc019.firebaseapp.com",
+        projectId: "cookbook-bc019",
+        storageBucket: "cookbook-bc019.firebasestorage.app",
+        messagingSenderId: "879130337307",
+        appId: "1:879130337307:web:66152f12488f3cded318be"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      // ---------- CONSTANTS ----------
+      const USER = {
+        birthDate: new Date(1998, 1, 4), // Feb 4 1998
+        heightCm: 175,
+        startWeight: 80,
+        gender: 'male',
+        activityFactor: 1.55 // on feet, physical job
+      };
+      const CALORIE_FLOOR = 1500;
+      const PROTEIN_PER_KG = 2.2;
+      const GOAL_LOSS_KG_PER_WEEK = 0.7;
+
+      // Placeholder for Vercel proxy (user will set up separately)
+      const PROXY_URL = 'https://your-vercel-proxy.vercel.app/api/chat';
+
+      // ---------- STATE ----------
+      let state = {
+        currentTab: 'today',
+        todayWeight: 80.0,
+        waist: 0,
+        neck: 0,
+        habits: {},
+        mealPlan: null,
+        eatenMeals: {},
+        snapImageData: null,
+        snapVariants: null,
+        shoppingList: [],
+        measurements: [],
+        dailyLog: {},
+        latestRollingAvg: null,
+        latestBodyFat: null
+      };
+
+      // ---------- SEED DATA (realistic for testing) ----------
+      function seedDataIfEmpty() {
+        const seedMeasurements = [
+          { date: '2025-03-01', weight: 82.5, waist: 96, neck: 39 },
+          { date: '2025-03-08', weight: 81.8, waist: 95, neck: 39 },
+          { date: '2025-03-15', weight: 81.0, waist: 94, neck: 38.5 },
+          { date: '2025-03-22', weight: 80.5, waist: 93, neck: 38.5 },
+          { date: '2025-03-29', weight: 80.0, waist: 92, neck: 38 },
+          { date: '2025-04-05', weight: 79.4, waist: 91, neck: 38 },
+          { date: '2025-04-12', weight: 79.0, waist: 90, neck: 37.5 },
+          { date: '2025-04-19', weight: 78.6, waist: 89, neck: 37.5 },
+          { date: '2025-04-26', weight: 78.2, waist: 88, neck: 37 }
+        ];
+        const seedDailyLog = {};
+        const today = new Date().toISOString().slice(0,10);
+        // add a few days of habit logs
+        for (let i = 0; i < 5; i++) {
+          const d = new Date(); d.setDate(d.getDate() - i);
+          const key = d.toISOString().slice(0,10);
+          seedDailyLog[key] = {
+            habits: { weighed: i<4, protein: i<3, water: i<2, steps: i<3, sleep: i<4 },
+            weight: 78.2 + (i * 0.15),
+            mealsEaten: i < 2 ? ['breakfast','lunch'] : []
+          };
+        }
+        // meal plan seed
+        const seedMealPlan = {
+          meals: [
+            { id: 'm1', name: 'Greek Yogurt & Berries', time: '07:30', calories: 320, protein: 28, carbs: 35, fat: 8, description: '0% Greek yogurt, mixed berries, honey', eaten: false },
+            { id: 'm2', name: 'Chicken & Quinoa Bowl', time: '12:30', calories: 550, protein: 45, carbs: 60, fat: 12, description: 'Grilled chicken, quinoa, roasted veg', eaten: false },
+            { id: 'm3', name: 'Salmon & Sweet Potato', time: '18:30', calories: 620, protein: 42, carbs: 45, fat: 22, description: 'Baked salmon, sweet potato mash, broccoli', eaten: false },
+            { id: 'm4', name: 'Casein Pudding', time: '21:00', calories: 210, protein: 30, carbs: 12, fat: 3, description: 'Casein powder, almond milk, chia seeds', eaten: false }
+          ]
+        };
+        const seedShoppingList = ['Chicken breast', 'Greek yogurt', 'Quinoa', 'Salmon fillet', 'Sweet potato', 'Broccoli', 'Berries', 'Almond milk'];
+
+        // write to firestore if collections are empty (only for first run)
+        db.collection('measurements').limit(1).get().then(snap => {
+          if (snap.empty) {
+            seedMeasurements.forEach(m => db.collection('measurements').add(m));
+          }
+        });
+        db.collection('dailyLog').limit(1).get().then(snap => {
+          if (snap.empty) {
+            for (const [date, val] of Object.entries(seedDailyLog)) {
+              db.collection('dailyLog').doc(date).set(val);
+            }
+          }
+        });
+        db.collection('mealPlan').limit(1).get().then(snap => {
+          if (snap.empty) {
+            db.collection('mealPlan').add(seedMealPlan);
+          }
+        });
+        db.collection('snacks').limit(1).get().then(snap => {
+          if (snap.empty) {
+            db.collection('snacks').add({ shoppingList: seedShoppingList });
+          }
+        });
+      }
+
+      // ---------- UTILS ----------
+      function flash(msg) {
+        const el = document.createElement('div');
+        el.className = 'flash';
+        el.textContent = msg;
+        document.getElementById('flashContainer').appendChild(el);
+        setTimeout(() => el.remove(), 2500);
+      }
+
+      function todayKey() {
+        return new Date().toISOString().slice(0,10);
+      }
+
+      function calcBodyFatNavy(waistCm, neckCm, heightCm) {
+        // US Navy method for men: 86.010 * log10(waist - neck) - 70.041 * log10(height) + 36.76
+        if (!waistCm || !neckCm) return null;
+        const diff = waistCm - neckCm;
+        if (diff <= 0) return null;
+        const bf = 86.010 * Math.log10(diff) - 70.041 * Math.log10(heightCm) + 36.76;
+        return Math.max(3, Math.min(60, bf));
+      }
+
+      function calcBMR(weightKg, heightCm, age) {
+        // Mifflin-St Jeor for men
+        return 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
+      }
+
+      function calcTDEE(bmr) {
+        return bmr * USER.activityFactor;
+      }
+
+      function getSafeCalorieTarget(weightKg) {
+        const age = new Date().getFullYear() - USER.birthDate.getFullYear();
+        const bmr = calcBMR(weightKg, USER.heightCm, age);
+        const tdee = calcTDEE(bmr);
+        // desired deficit for 0.7kg/week = ~7700 * 0.7 / 7 = 770 kcal/day deficit
+        const desiredDeficit = 770;
+        let target = tdee - desiredDeficit;
+        target = Math.round(target);
+        let warning = null;
+        if (target < CALORIE_FLOOR) {
+          target = CALORIE_FLOOR;
+          warning = `⚠️ Requested deficit would put you below the ${CALORIE_FLOOR} kcal floor. Target capped at ${CALORIE_FLOOR} kcal for safety.`;
+        }
+        return { target, warning, tdee, bmr };
+      }
+
+      // ---------- RENDER FUNCTIONS ----------
+      function renderToday() {
+        // Update date label
+        document.getElementById('todayDateLabel').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+
+        // Weight input
+        const savedWeight = state.todayWeight || 80.0;
+        document.getElementById('morningWeight').value = savedWeight;
+
+        // Calc target
+        const { target, warning, tdee } = getSafeCalorieTarget(savedWeight);
+        document.getElementById('targetCalories').textContent = target;
+        const proteinTarget = Math.round(savedWeight * PROTEIN_PER_KG);
+        document.getElementById('targetProtein').textContent = proteinTarget;
+
+        const warnEl = document.getElementById('calorieWarning');
+        if (warning) {
+          warnEl.textContent = warning;
+          warnEl.classList.remove('hidden');
+        } else {
+          warnEl.classList.add('hidden');
+        }
+
+        // weekly loss projection: (tdee - target) * 7 / 7700
+        const weeklyLoss = ((tdee - target) * 7 / 7700).toFixed(2);
+        document.getElementById('weeklyLoss').textContent = weeklyLoss;
+
+        // Habits
+        const todayHabits = state.habits || {};
+        const habitDefs = [
+          { key: 'weighed', label: 'Weighed in' },
+          { key: 'protein', label: 'Hit protein' },
+          { key: 'water', label: 'Drank 2L+ water' },
+          { key: 'steps', label: '10k+ steps' },
+          { key: 'sleep', label: '7+ hours sleep' }
+        ];
+        const habitList = document.getElementById('habitList');
+        habitList.innerHTML = habitDefs.map(h => `
+          <div class="habit-item ${todayHabits[h.key] ? 'done' : ''}" data-habit="${h.key}">
+            <div class="habit-check">${todayHabits[h.key] ? '✓' : ''}</div>
+            <span>${h.label}</span>
+          </div>
+        `).join('');
+        // attach click handlers
+        habitList.querySelectorAll('.habit-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const key = el.dataset.habit;
+            state.habits[key] = !state.habits[key];
+            renderToday();
+            saveDailyLog();
+          });
+        });
+
+        // Meal progress
+        const eaten = state.eatenMeals || {};
+        const meals = state.mealPlan?.meals || [];
+        const totalMeals = meals.length || 4;
+        const eatenCount = meals.filter(m => eaten[m.id]).length;
+        const pct = totalMeals ? Math.round((eatenCount / totalMeals) * 100) : 0;
+        document.getElementById('mealProgressBar').style.width = pct + '%';
+        document.getElementById('mealProgressText').textContent = `${eatenCount}/${totalMeals} eaten`;
+        document.getElementById('todayMealsPreview').textContent = meals.map(m => m.name).join(' · ') || 'No meal plan yet';
+
+        // Rolling avg & BF
+        if (state.measurements.length) {
+          const recent = state.measurements.slice(-7);
+          const avg = recent.reduce((s, m) => s + m.weight, 0) / recent.length;
+          document.getElementById('rollingAvg').textContent = avg.toFixed(1);
+          // BF from latest waist/neck
+          const last = state.measurements[state.measurements.length-1];
+          if (last.waist && last.neck) {
+            const bf = calcBodyFatNavy(last.waist, last.neck, USER.heightCm);
+            document.getElementById('bodyFatDisplay').textContent = bf ? bf.toFixed(1) : '—';
+          }
+        } else {
+          document.getElementById('rollingAvg').textContent = '—';
+        }
+      }
+
+      function renderMealPlan() {
+        const container = document.getElementById('mealPlanContainer');
+        const meals = state.mealPlan?.meals || [];
+        if (!meals.length) {
+          container.innerHTML = `<div class="card text-muted">No meal plan yet. Tap generate.</div>`;
+          document.getElementById('regenerateCard').style.display = 'none';
+          return;
+        }
+        const eaten = state.eatenMeals || {};
+        container.innerHTML = meals.map(m => `
+          <div class="meal-card ${eaten[m.id] ? 'eaten' : ''}" data-meal-id="${m.id}">
+            <div class="meal-title">
+              <span>${m.name}</span>
+              <span>${m.calories} kcal</span>
+            </div>
+            <div class="meal-macros">
+              <span>⏰ ${m.time}</span>
+              <span>🥩 ${m.protein}g</span>
+              <span>🍚 ${m.carbs}g</span>
+              <span>🥑 ${m.fat}g</span>
+            </div>
+            <div class="meal-desc">${m.description}</div>
+          </div>
+        `).join('');
+        container.querySelectorAll('.meal-card').forEach(el => {
+          el.addEventListener('click', () => {
+            const id = el.dataset.mealId;
+            state.eatenMeals[id] = !state.eatenMeals[id];
+            renderMealPlan();
+            renderToday();
+            saveDailyLog();
+          });
+        });
+        document.getElementById('regenerateCard').style.display = 'block';
+      }
+
+      function renderProgress() {
+        // chart
+        const ctx = document.getElementById('weightChart').getContext('2d');
+        const labels = state.measurements.map(m => m.date.slice(5));
+        const data = state.measurements.map(m => m.weight);
+        if (window.weightChartInstance) window.weightChartInstance.destroy();
+        window.weightChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Weight (kg)',
+              data,
+              borderColor: '#f5a623',
+              backgroundColor: 'rgba(245,166,35,0.1)',
+              tension: 0.3,
+              fill: true,
+              pointBackgroundColor: '#f5a623',
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { grid: { color: '#2a2e3a' }, ticks: { color: '#9aa3af' } },
+              x: { grid: { display: false }, ticks: { color: '#9aa3af', maxTicksLimit: 6 } }
+            }
+          }
+        });
+
+        // stats
+        if (state.measurements.length) {
+          const recent = state.measurements.slice(-7);
+          const avg = recent.reduce((s, m) => s + m.weight, 0) / recent.length;
+          document.getElementById('progressRollingAvg').textContent = avg.toFixed(1);
+          const first = state.measurements[0].weight;
+          const last = state.measurements[state.measurements.length-1].weight;
+          document.getElementById('totalLost').textContent = (first - last).toFixed(1);
+          // weekly trend
+          const prev7 = state.measurements.slice(-14, -7);
+          const last7 = state.measurements.slice(-7);
+          if (prev7.length && last7.length) {
+            const avgPrev = prev7.reduce((s,m)=>s+m.weight,0)/prev7.length;
+            const avgLast = last7.reduce((s,m)=>s+m.weight,0)/last7.length;
+            const diff = avgLast - avgPrev;
+            document.getElementById('weeklyTrend').innerHTML = `
+              Last 7 days avg: <strong>${avgLast.toFixed(1)} kg</strong><br>
+              Previous 7 days avg: <strong>${avgPrev.toFixed(1)} kg</strong><br>
+              Change: <strong style="color:${diff < 0 ? '#2ecc71' : '#e74c3c'}">${diff > 0 ? '+' : ''}${diff.toFixed(2)} kg</strong>
+            `;
+          }
+          // BF progress
+          const lastM = state.measurements[state.measurements.length-1];
+          if (lastM.waist && lastM.neck) {
+            const bf = calcBodyFatNavy(lastM.waist, lastM.neck, USER.heightCm);
+            document.getElementById('bodyFatProgress').innerHTML = `Latest: <strong>${bf.toFixed(1)}%</strong> (waist ${lastM.waist}cm, neck ${lastM.neck}cm)`;
+          }
+        }
+      }
+
+      function renderLog() {
+        // recent weighins
+        const weighins = [...state.measurements].reverse().slice(0, 10);
+        document.getElementById('recentWeighins').innerHTML = weighins.map(m => `
+          <div class="log-entry">
+            <span>${m.date}</span>
+            <strong>${m.weight} kg</strong>
+          </div>
+        `).join('') || '<div class="text-muted">No entries yet.</div>';
+
+        // habit history (last 7 days from dailyLog)
+        const today = new Date();
+        let habitHtml = '';
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(); d.setDate(d.getDate() - i);
+          const key = d.toISOString().slice(0,10);
+          const log = state.dailyLog[key];
+          if (log && log.habits) {
+            const done = Object.values(log.habits).filter(Boolean).length;
+            habitHtml += `<div class="log-entry"><span>${key}</span><span>${done}/5 habits</span></div>`;
+          }
+        }
+        document.getElementById('habitHistory').innerHTML = habitHtml || '<div class="text-muted">No habit history.</div>';
+
+        // shopping list
+        document.getElementById('shoppingListContainer').innerHTML = state.shoppingList.length
+          ? state.shoppingList.map(item => `<div class="shopping-item"><span>${item}</span><span>🛒</span></div>`).join('')
+          : '<div class="text-muted">Shopping list empty. Add from Snap tab.</div>';
+      }
+
+      function renderAll() {
+        renderToday();
+        renderMealPlan();
+        renderProgress();
+        renderLog();
+      }
+
+      // ---------- FIRESTORE SYNC ----------
+      async function loadFromFirestore() {
+        try {
+          // measurements
+          const mSnap = await db.collection('measurements').orderBy('date').get();
+          state.measurements = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+          if (state.measurements.length) {
+            state.todayWeight = state.measurements[state.measurements.length-1].weight || 80.0;
+          }
+          // dailyLog (today)
+          const today = todayKey();
+          const logDoc = await db.collection('dailyLog').doc(today).get();
+          if (logDoc.exists) {
+            const data = logDoc.data();
+            state.habits = data.habits || {};
+            state.eatenMeals = data.mealsEaten ? Object.fromEntries(data.mealsEaten.map(id => [id, true])) : {};
+          }
+          // mealPlan
+          const planSnap = await db.collection('mealPlan').limit(1).get();
+          if (!planSnap.empty) {
+            state.mealPlan = planSnap.docs[0].data();
+          }
+          // shopping list from snacks
+          const snackSnap = await db.collection('snacks').limit(1).get();
+          if (!snackSnap.empty) {
+            state.shoppingList = snackSnap.docs[0].data().shoppingList || [];
+          }
+          // load all daily logs for habit history
+          const logsSnap = await db.collection('dailyLog').get();
+          state.dailyLog = {};
+          logsSnap.forEach(doc => { state.dailyLog[doc.id] = doc.data(); });
+          renderAll();
+        } catch (e) {
+          console.warn('Firestore load error (offline?), using seed.', e);
+          // fallback seed
+          seedDataIfEmpty();
+        }
+      }
+
+      async function saveDailyLog() {
+        const today = todayKey();
+        const mealsEaten = Object.keys(state.eatenMeals).filter(id => state.eatenMeals[id]);
+        await db.collection('dailyLog').doc(today).set({
+          habits: state.habits,
+          mealsEaten,
+          weight: state.todayWeight
+        }, { merge: true });
+      }
+
+      async function saveWeight(weight) {
+        const today = todayKey();
+        // add to measurements if not exists for today
+        const existing = state.measurements.find(m => m.date === today);
+        if (!existing) {
+          await db.collection('measurements').add({
+            date: today,
+            weight: weight
+          });
+        } else {
+          await db.collection('measurements').doc(existing.id).update({ weight });
+        }
+        state.todayWeight = weight;
+        await loadFromFirestore();
+      }
+
+      // ---------- DEEPSEEK PROXY CALLS (placeholder) ----------
+      async function callDeepSeek(messages) {
+        // This is the placeholder proxy call. User will set up Vercel.
+        // For demo, we return realistic mock responses.
+        console.log('DeepSeek request:', messages);
+        // Mock for meal plan
+        if (messages.some(m => m.content && m.content.includes && m.content.includes('meal plan'))) {
+          return {
+            meals: [
+              { id: 'm1', name: 'Greek Yogurt & Berries', time: '07:30', calories: 320, protein: 28, carbs: 35, fat: 8, description: '0% Greek yogurt, mixed berries, honey' },
+              { id: 'm2', name: 'Chicken & Quinoa Bowl', time: '12:30', calories: 550, protein: 45, carbs: 60, fat: 12, description: 'Grilled chicken, quinoa, roasted veg' },
+              { id: 'm3', name: 'Salmon & Sweet Potato', time: '18:30', calories: 620, protein: 42, carbs: 45, fat: 22, description: 'Baked salmon, sweet potato mash, broccoli' },
+              { id: 'm4', name: 'Casein Pudding', time: '21:00', calories: 210, protein: 30, carbs: 12, fat: 3, description: 'Casein powder, almond milk, chia seeds' }
+            ]
+          };
+        }
+        // Mock for snap
+        if (messages.some(m => m.content && m.content.some && m.content.some(c => c.type === 'image_url'))) {
+          const variants = [400, 500, 600, 700, 800].map(cal => ({
+            calories: cal,
+            name: cal <= 500 ? 'Light Chicken Stir-fry' : 'Chicken Stir-fry',
+            ingredients: cal <= 500 ? ['Chicken breast 150g', 'Cauliflower rice 200g', 'No oil'] : ['Chicken breast 180g', 'Jasmine rice 150g', 'Sesame oil 1 tsp'],
+            instructions: 'Cook chicken, add veg, serve over rice.',
+            protein: Math.round(cal * 0.25 / 4),
+            carbs: Math.round(cal * 0.4 / 4),
+            fat: Math.round(cal * 0.15 / 9)
+          }));
+          return {
+            dish: 'Chicken Stir-fry',
+            variants
+          };
+        }
+        return null;
+      }
+
+      // ---------- EVENT LISTENERS & INIT ----------
+      function initTabs() {
+        document.querySelectorAll('.tab-item').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
+            state.currentTab = btn.dataset.tab;
+            if (btn.dataset.tab === 'progress') renderProgress();
+            if (btn.dataset.tab === 'log') renderLog();
+          });
+        });
+      }
+
+      // Weight save
+      document.getElementById('saveWeightBtn').addEventListener('click', async () => {
+        const val = parseFloat(document.getElementById('morningWeight').value);
+        if (isNaN(val) || val < 30 || val > 200) return flash('⚠️ Enter valid weight (30-200 kg)');
+        await saveWeight(val);
+        flash('✅ Weight saved!');
+        renderAll();
+      });
+
+      // Body fat calc
+      document.getElementById('calcBodyFatBtn').addEventListener('click', async () => {
+        const waist = parseFloat(document.getElementById('waistInput').value);
+        const neck = parseFloat(document.getElementById('neckInput').value);
+        if (isNaN(waist) || isNaN(neck)) return flash('⚠️ Enter waist and neck in cm');
+        const bf = calcBodyFatNavy(waist, neck, USER.heightCm);
+        if (!bf) return flash('⚠️ Neck must be smaller than waist');
+        // save to latest measurement
+        const last = state.measurements[state.measurements.length-1];
+        if (last) {
+          await db.collection('measurements').doc(last.id).update({ waist, neck });
+        } else {
+          await db.collection('measurements').add({ date: todayKey(), weight: state.todayWeight, waist, neck });
+        }
+        flash(`✅ Body fat: ${bf.toFixed(1)}%`);
+        await loadFromFirestore();
+        renderAll();
+      });
+
+      // Generate plan
+      document.getElementById('generatePlanBtn').addEventListener('click', async () => {
+        flash('✨ Generating plan...');
+        const weight = state.todayWeight || 80;
+        const { target } = getSafeCalorieTarget(weight);
+        const prompt = `Generate a meal plan for a 27yo male, 175cm, ${weight}kg. Target ${target} kcal, protein ${Math.round(weight*2.2)}g. Return JSON with meals array (id, name, time, calories, protein, carbs, fat, description).`;
+        try {
+          const result = await callDeepSeek([{ role: 'system', content: 'You are a nutrition assistant. Respond only with JSON.' }, { role: 'user', content: prompt }]);
+          if (result && result.meals) {
+            await db.collection('mealPlan').doc('current').set(result);
+            state.mealPlan = result;
+            flash('✨ Plan generated!');
+            renderMealPlan();
+          }
+        } catch (e) {
+          flash('❌ AI error, using seed plan');
+        }
+      });
+
+      document.getElementById('regeneratePlanBtn').addEventListener('click', async () => {
+        await document.getElementById('generatePlanBtn').click();
+      });
+
+      // Snap tab
+      document.getElementById('snapBtn').addEventListener('click', () => {
+        document.getElementById('snapInput').click();
+      });
+
+      document.getElementById('snapInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            // compress to 600px
+            const canvas = document.createElement('canvas');
+            const scale = Math.min(600 / img.width, 600 / img.height, 1);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            state.snapImageData = dataUrl;
+            const preview = document.getElementById('snapPreview');
+            preview.src = dataUrl;
+            preview.classList.remove('hidden');
+            document.getElementById('analyzeDishBtn').classList.remove('hidden');
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      document.getElementById('analyzeDishBtn').addEventListener('click', async () => {
+        if (!state.snapImageData) return flash('⚠️ No image');
+        flash('🔍 Identifying dish...');
+        const base64 = state.snapImageData;
+        const messages = [
+          { role: 'system', content: 'You identify dishes and return JSON with recipe variants at 400,500,600,700,800 calories.' },
+          { role: 'user', content: [
+            { type: 'text', text: 'What dish is this? Return JSON with dish name and variants array (calories, name, ingredients, instructions, protein, carbs, fat).' },
+            { type: 'image_url', image_url: { url: base64 } }
+          ]}
+        ];
+        try {
+          const result = await callDeepSeek(messages);
+          if (result && result.variants) {
+            state.snapVariants = result;
+            renderSnapResult(result);
+            flash('✨ AI estimated!');
+          }
+        } catch (e) {
+          flash('❌ AI error, try again');
+        }
+      });
+
+      function renderSnapResult(data) {
+        const container = document.getElementById('snapResultContainer');
+        const variants = data.variants || [];
+        container.innerHTML = `
+          <div class="card">
+            <h3>${data.dish || 'Identified dish'}</h3>
+            <div class="variant-slider">
+              <span>400</span>
+              <input type="range" id="variantSlider" min="0" max="4" value="0" step="1">
+              <span>800</span>
+            </div>
+            <div id="variantDisplay"></div>
+            <div class="honesty-note">
+              ⚖️ Lower-calorie versions use swaps like cauliflower rice, Greek yoghurt, and no oil. They will be less rich and tasty — this is an honest trade-off, not “fat-burning magic”.
+            </div>
+            <div class="flex-row mt-2">
+              <button class="btn secondary small" id="saveRecipeBtn">💾 Save to Recipes</button>
+              <button class="btn secondary small" id="addShoppingBtn">🛒 Add to Shopping List</button>
+            </div>
+          </div>
+        `;
+        const slider = document.getElementById('variantSlider');
+        const display = document.getElementById('variantDisplay');
+        function updateVariant(idx) {
+          const v = variants[idx];
+          if (!v) return;
+          display.innerHTML = `
+            <div class="stat-grid mt-2">
+              <div class="stat"><div class="label">Calories</div><div class="value">${v.calories}</div></div>
+              <div class="stat"><div class="label">Protein</div><div class="value">${v.protein}g</div></div>
+            </div>
+            <div class="flex-between text-small"><span>Carbs: ${v.carbs}g</span><span>Fat: ${v.fat}g</span></div>
+            <h4 class="mt-2">${v.name}</h4>
+            <p class="text-small mt-2"><strong>Ingredients:</strong> ${v.ingredients.join(', ')}</p>
+            <p class="text-small mt-2"><strong>Instructions:</strong> ${v.instructions}</p>
+          `;
+        }
+        slider.addEventListener('input', (e) => updateVariant(parseInt(e.target.value)));
+        updateVariant(0);
+
+        document.getElementById('saveRecipeBtn').addEventListener('click', async () => {
+          const idx = parseInt(slider.value);
+          const variant = variants[idx];
+          await db.collection('snacks').add({ savedRecipe: { dish: data.dish, ...variant, date: todayKey() } });
+          flash('✅ Recipe saved!');
+        });
+
+        document.getElementById('addShoppingBtn').addEventListener('click', async () => {
+          const idx = parseInt(slider.value);
+          const variant = variants[idx];
+          const items = variant.ingredients || [];
+          state.shoppingList = [...new Set([...state.shoppingList, ...items])];
+          await db.collection('snacks').doc('shoppingList').set({ shoppingList: state.shoppingList }, { merge: true });
+          flash('🛒 Added to shopping list!');
+          renderLog();
+        });
+      }
+
+      // ---------- BOOT ----------
+      async function boot() {
+        initTabs();
+        // seed if empty (runs async)
+        seedDataIfEmpty();
+        // load from firestore
+        await loadFromFirestore();
+        // ensure state has defaults
+        if (!state.habits) state.habits = {};
+        if (!state.eatenMeals) state.eatenMeals = {};
+        renderAll();
+      }
+
+      boot();
+    })();
+  </script>
+</body>
+</html>
