@@ -32,8 +32,6 @@
   .stat .unit { font-size:0.75rem; color:var(--text-muted); font-weight:400; }
   .badge { background:var(--accent); color:#0a0a0f; border-radius:40px; padding:4px 12px;
     font-size:0.75rem; font-weight:700; display:inline-block; }
-  .badge-low { background:#3b82f6; color:#fff; }
-  .badge-high { background:#ef4444; color:#fff; }
   .warning-banner { background:#3d2a1a; border-left:5px solid var(--warning); color:#fadcb0;
     padding:12px 14px; border-radius:12px; margin:12px 0; font-size:0.9rem; }
   .danger-banner { background:#3d1a1a; border-left:5px solid var(--danger); color:#ffc8c8;
@@ -55,7 +53,6 @@
   textarea { resize:vertical; min-height:80px; }
   .flex-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .flex-between { display:flex; justify-content:space-between; align-items:center; }
-  .flex-col { display:flex; flex-direction:column; gap:10px; }
   .habit-list { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
   .habit-item { display:flex; align-items:center; gap:12px; background:var(--bg-elev); padding:12px 14px;
     border-radius:16px; cursor:pointer; transition:background 0.1s; border:1px solid #2a2e3a; }
@@ -155,17 +152,15 @@
     border-radius:50%; animation:spin 0.8s linear infinite; display:inline-block; vertical-align:middle; }
   @keyframes spin { to { transform:rotate(360deg); } }
   .taste-scale { display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin:4px 0 8px; }
-  .taste-scale .active { color:var(--accent); font-weight:700; }
 </style>
 </head>
 <body>
 <div class="app" id="app">
   <div id="flashContainer"></div>
 
-  <!-- ============ TODAY ============ -->
+  <!-- TODAY -->
   <div id="tab-today" class="tab-panel">
     <h1>Cut<span>Track</span> <span style="font-size:0.9rem;font-weight:400;color:var(--text-muted);">· today</span></h1>
-
     <div class="card">
       <div class="flex-between"><h3>☀️ Morning weight</h3><span class="badge" id="todayDateLabel">—</span></div>
       <div class="flex-row mt-2">
@@ -228,10 +223,9 @@
     </div>
   </div>
 
-  <!-- ============ MEAL PLAN ============ -->
+  <!-- MEAL PLAN -->
   <div id="tab-mealplan" class="tab-panel hidden">
     <h2>🍱 Meal Plan</h2>
-
     <div class="card">
       <h3>Target calories</h3>
       <div class="variant-slider">
@@ -240,11 +234,11 @@
         <span class="text-tiny">2,600</span>
       </div>
       <div class="slider-labels">
-        <span id="planSliderLowLabel" class="active">Aggressive deficit</span>
-        <span id="planSliderHighLabel">Maintenance</span>
+        <span id="planSliderLowLabel">🥗 Aggressive deficit</span>
+        <span id="planSliderHighLabel">🍔 Maintenance</span>
       </div>
       <div class="stat-grid">
-        <div class="stat"><div class="label">Selected target</div><div class="value" id="planSliderValue">1840</div><div class="unit">kcal</div></div>
+        <div class="stat"><div class="label">Selected</div><div class="value" id="planSliderValue">1840</div><div class="unit">kcal</div></div>
         <div class="stat"><div class="label">Weekly loss</div><div class="value" id="planSliderLoss">0.70</div><div class="unit">kg/wk</div></div>
       </div>
       <div id="planSliderWarning"></div>
@@ -283,7 +277,7 @@
     </div>
   </div>
 
-  <!-- ============ SNAP ============ -->
+  <!-- SNAP -->
   <div id="tab-snap" class="tab-panel hidden">
     <h2>📸 Snap a dish</h2>
     <div class="card">
@@ -296,7 +290,7 @@
     <div id="snapResultContainer"></div>
   </div>
 
-  <!-- ============ COOKBOOK ============ -->
+  <!-- COOKBOOK -->
   <div id="tab-cookbook" class="tab-panel hidden">
     <h2>📖 Cookbook</h2>
     <div class="card">
@@ -318,7 +312,7 @@
     <div id="cookbookList"></div>
   </div>
 
-  <!-- ============ CHAT ============ -->
+  <!-- CHAT -->
   <div id="tab-chat" class="tab-panel hidden">
     <h2>🤖 AI Coach</h2>
     <div class="chat-container">
@@ -339,7 +333,7 @@
     </div>
   </div>
 
-  <!-- ============ PROGRESS ============ -->
+  <!-- PROGRESS -->
   <div id="tab-progress" class="tab-panel hidden">
     <h2>📈 Progress</h2>
     <div class="card">
@@ -363,7 +357,7 @@
     <div class="card"><h3>🏆 Achievements</h3><div id="achievementsList"></div></div>
   </div>
 
-  <!-- ============ LOG ============ -->
+  <!-- LOG -->
   <div id="tab-log" class="tab-panel hidden">
     <h2>📋 Log & Tools</h2>
     <div class="card"><h3>Recent weigh-ins</h3><div id="recentWeighins"></div></div>
@@ -409,8 +403,7 @@
   const auth = firebase.auth();
 
   // ============ CONFIG ============
-  // ⚠️ REPLACE THIS with your actual Vercel proxy URL
-  const PROXY_URL = 'https://your-vercel-proxy.vercel.app/api/chat';
+  const PROXY_URL = 'https://fat-track-neon.vercel.app/api/chat';
 
   const USER = {
     birthDate: new Date(1998, 1, 4),
@@ -419,7 +412,6 @@
     goalWeight: 75
   };
   const CALORIE_FLOOR = 1500;
-  const CALORIE_CEILING = 2600;
   const PROTEIN_PER_KG = 2.2;
 
   // ============ STATE ============
@@ -465,7 +457,6 @@
     return calcBMR(weightKg, USER.heightCm, age) * USER.activityFactor;
   }
   function getSafeCalorieTarget(weightKg) {
-    // Auto-recommended target: 25% below maintenance, floored at 1500
     const tdee = getTDEE(weightKg);
     let target = Math.round(tdee * 0.75);
     let warning = null;
@@ -607,7 +598,6 @@
     document.getElementById('weeklyLoss').textContent = ((tdee - target) * 7 / 7700).toFixed(2);
     document.getElementById('streakBadge').textContent = `${calcStreak()} days`;
 
-    // Habits
     const defs = [
       { key:'weighed', label:'Weighed in' },
       { key:'protein', label:'Hit protein' },
@@ -629,7 +619,6 @@
       };
     });
 
-    // Water
     const waterEl = document.getElementById('waterTracker');
     waterEl.innerHTML = Array.from({length:8}, (_, i) =>
       `<div class="water-glass ${i < state.waterGlasses ? 'filled' : ''}" data-glass="${i}">💧</div>`).join('');
@@ -642,7 +631,6 @@
     });
     document.getElementById('waterCount').textContent = `${state.waterGlasses}/8 glasses`;
 
-    // Meal progress
     const meals = state.mealPlan?.meals || [];
     const totalMeals = meals.length || 4;
     const eatenCount = meals.filter(m => state.eatenMeals[m.id]).length;
@@ -652,7 +640,6 @@
     document.getElementById('todayMealsPreview').textContent =
       meals.map(m => m.name).join(' · ') || 'No meal plan yet';
 
-    // Rolling avg & BF
     if (state.measurements.length) {
       const recent = state.measurements.slice(-7);
       document.getElementById('rollingAvg').textContent =
@@ -664,7 +651,6 @@
       }
     }
 
-    // Mood
     document.querySelectorAll('#moodRow button').forEach(b => {
       b.style.borderColor = b.dataset.mood === state.mood ? 'var(--accent)' : '';
       b.style.color = b.dataset.mood === state.mood ? 'var(--accent)' : '';
@@ -779,7 +765,6 @@
       flash('🛒 Added to shopping list!'); renderLog();
     };
     modal.querySelector('#planThisBtn').onclick = async () => {
-      // Replace today's meal plan with this single recipe as a single-meal plan
       const newPlan = { meals: [{
         id: 'recipe-' + id, name: r.name,
         time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
@@ -919,17 +904,10 @@
     document.getElementById('planSliderValue').textContent = state.planCalorieTarget;
     document.getElementById('planSliderLoss').textContent = weeklyLoss.toFixed(2);
 
-    // Animate taste scale
-    const lowActive = state.planCalorieTarget <= 1700;
-    const highActive = state.planCalorieTarget >= 2400;
-    document.getElementById('planSliderLowLabel').classList.toggle('active', lowActive);
-    document.getElementById('planSliderHighLabel').classList.toggle('active', highActive);
-
-    // Warning if aggressive
     const warnEl = document.getElementById('planSliderWarning');
     if (state.planCalorieTarget <= 1600) {
       warnEl.innerHTML = `<div class="danger-banner">
-        ⚠️ <strong>Aggressive deficit.</strong> This is below 25% of your maintenance. Expect hunger, low energy, and possible muscle loss. Short-term only.
+        ⚠️ <strong>Aggressive deficit.</strong> Below 25% of maintenance. Expect hunger, low energy, and possible muscle loss. Short-term only.
       </div>`;
     } else if (weeklyLoss > 1.0) {
       warnEl.innerHTML = `<div class="warning-banner">
@@ -958,7 +936,6 @@
     });
   }
 
-  // Weight save
   document.getElementById('saveWeightBtn').onclick = async () => {
     const val = parseFloat(document.getElementById('morningWeight').value);
     if (isNaN(val) || val < 30 || val > 200) return flash('⚠️ Enter valid weight (30-200 kg)');
@@ -968,7 +945,6 @@
     } catch (e) { flash('❌ Save failed'); console.error(e); }
   };
 
-  // Body fat calc
   document.getElementById('calcBodyFatBtn').onclick = async () => {
     const waist = parseFloat(document.getElementById('waistInput').value);
     const neck = parseFloat(document.getElementById('neckInput').value);
@@ -984,7 +960,6 @@
     } catch (e) { flash('❌ Save failed'); console.error(e); }
   };
 
-  // Mood
   document.querySelectorAll('#moodRow button').forEach(btn => {
     btn.onclick = async () => {
       state.mood = btn.dataset.mood;
@@ -993,13 +968,11 @@
     };
   });
 
-  // Plan calorie slider
   document.getElementById('planCalorieSlider').oninput = (e) => {
     state.planCalorieTarget = parseInt(e.target.value);
     renderPlanSlider();
   };
 
-  // Generate plan
   document.getElementById('generatePlanBtn').onclick = async () => {
     const btn = document.getElementById('generatePlanBtn');
     btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Generating...';
@@ -1017,10 +990,10 @@
         `Generate a ${days}-day meal plan for a 27yo male, 175cm, ${weight}kg, works a physical job on his feet. ` +
         `Target ${target} kcal/day, protein ${protein}g/day. Diet style: ${diet}. Budget: ${budget}. ` +
         (target <= 1700
-          ? 'This is an aggressive deficit — use high-volume, low-calorie foods (cauliflower rice, lean protein, Greek yogurt, no oil) and note in each description that taste is sacrificed.'
+          ? 'This is an aggressive deficit — use high-volume, low-calorie foods and note in each description that taste is sacrificed.'
           : 'This is a moderate deficit — keep meals satisfying.') +
         ` Return JSON: {"meals":[{"id":"m1","name":"...","time":"07:30","calories":320,"protein":28,"carbs":35,"fat":8,"description":"..."}, ...]}. ` +
-        `For multi-day plans use ids like "d1m1","d1m2","d2m1". Aim for roughly ${Math.round(target*0.25)} kcal breakfast, ${Math.round(target*0.35)} lunch, ${Math.round(target*0.3)} dinner, ${Math.round(target*0.1)} snack.`;
+        `For multi-day plans use ids like "d1m1","d1m2","d2m1".`;
 
       const raw = await callDeepSeek([
         { role:'system', content: systemPrompt },
@@ -1042,7 +1015,6 @@
     document.getElementById('generatePlanBtn').click();
   };
 
-  // Meal plan duration
   document.querySelectorAll('#mealPlanDuration button').forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll('#mealPlanDuration button').forEach(b => b.classList.remove('active'));
@@ -1051,7 +1023,6 @@
     };
   });
 
-  // Snap
   document.getElementById('snapBtn').onclick = () => {
     document.getElementById('snapInput').click();
   };
@@ -1137,7 +1108,7 @@
         </div>
         <div class="flex-row mt-2">
           <button class="btn secondary small" id="saveRecipeBtn">💾 Save to Cookbook</button>
-          <button class="btn secondary small" id="addShoppingBtn">🛒 Add to Shopping List</button>
+          <button class="btn secondary small" id="addShoppingSnapBtn">🛒 Add to Shopping List</button>
         </div>
       </div>`;
     const slider = document.getElementById('variantSlider');
@@ -1157,15 +1128,10 @@
         <p class="text-small mt-2"><strong>Ingredients:</strong> ${(v.ingredients||[]).join(', ')}</p>
         <p class="text-small mt-2"><strong>Instructions:</strong> ${v.instructions||''}</p>
         ${v.taste_note ? `<p class="text-small mt-2 text-muted"><em>Taste note: ${v.taste_note}</em></p>` : ''}`;
-      // Update scale highlight
-      document.getElementById('tasteLow').style.color =
-        idx <= 1 ? 'var(--accent)' : 'var(--text-muted)';
-      document.getElementById('tasteLow').style.fontWeight =
-        idx <= 1 ? '700' : '400';
-      document.getElementById('tasteHigh').style.color =
-        idx >= 3 ? 'var(--accent)' : 'var(--text-muted)';
-      document.getElementById('tasteHigh').style.fontWeight =
-        idx >= 3 ? '700' : '400';
+      document.getElementById('tasteLow').style.color = idx <= 1 ? 'var(--accent)' : 'var(--text-muted)';
+      document.getElementById('tasteLow').style.fontWeight = idx <= 1 ? '700' : '400';
+      document.getElementById('tasteHigh').style.color = idx >= 3 ? 'var(--accent)' : 'var(--text-muted)';
+      document.getElementById('tasteHigh').style.fontWeight = idx >= 3 ? '700' : '400';
     }
     slider.oninput = (e) => updateVariant(parseInt(e.target.value));
     updateVariant(0);
@@ -1181,7 +1147,7 @@
       flash('✅ Saved to Cookbook!');
     };
 
-    document.getElementById('addShoppingBtn').onclick = async () => {
+    document.getElementById('addShoppingSnapBtn').onclick = async () => {
       const v = variants[parseInt(slider.value)];
       state.shoppingList = [...new Set([...state.shoppingList, ...(v.ingredients||[])])];
       await db.collection('snacks').doc('shoppingList').set(
@@ -1190,7 +1156,6 @@
     };
   }
 
-  // Add recipe manually
   document.getElementById('addRecipeBtn').onclick = () => {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -1236,7 +1201,6 @@
   document.getElementById('recipeSearch').oninput = renderCookbook;
   document.getElementById('recipeFilter').onchange = renderCookbook;
 
-  // Chat
   async function sendChat(text) {
     if (!text.trim()) return;
     state.chatHistory.push({ role:'user', content: text });
@@ -1297,7 +1261,6 @@
     btn.onclick = () => sendChat(btn.dataset.prompt);
   });
 
-  // Chart range
   document.querySelectorAll('#chartRange button').forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll('#chartRange button').forEach(b => b.classList.remove('active'));
@@ -1307,7 +1270,6 @@
     };
   });
 
-  // Shopping list add
   document.getElementById('addShoppingBtn').onclick = async () => {
     const val = document.getElementById('newShoppingItem').value.trim();
     if (!val) return;
@@ -1318,7 +1280,6 @@
     renderLog();
   };
 
-  // Export data
   document.getElementById('exportDataBtn').onclick = () => {
     const data = {
       exported: new Date().toISOString(),
@@ -1337,7 +1298,6 @@
     flash('📤 Backup downloaded!');
   };
 
-  // ============ BOOT ============
   async function boot() {
     initTabs();
     try {
@@ -1346,7 +1306,6 @@
       console.warn('Anon auth failed (enable it in Firebase Console):', e);
     }
     await loadFromFirestore();
-    // Set initial plan calorie target from auto-recommendation
     const { target } = getSafeCalorieTarget(state.todayWeight);
     state.planCalorieTarget = target;
     renderAll();
