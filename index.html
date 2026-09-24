@@ -152,15 +152,49 @@
     border-radius:50%; animation:spin 0.8s linear infinite; display:inline-block; vertical-align:middle; }
   @keyframes spin { to { transform:rotate(360deg); } }
   .taste-scale { display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin:4px 0 8px; }
+  .auth-overlay { position:fixed; inset:0; background:#0a0a0f; z-index:3000; display:flex;
+    align-items:center; justify-content:center; padding:24px; }
+  .auth-card { max-width:380px; width:100%; text-align:center; }
+  .auth-card h1 { justify-content:center; margin-bottom:8px; }
+  .google-btn { display:flex; align-items:center; justify-content:center; gap:10px;
+    background:#fff; color:#1f1f1f; border:none; border-radius:60px; padding:14px 20px;
+    font-weight:600; font-size:1rem; cursor:pointer; width:100%; margin-top:24px;
+    transition:all 0.15s; }
+  .google-btn:active { transform:scale(0.98); opacity:0.9; }
+  .google-btn svg { width:20px; height:20px; }
 </style>
 </head>
 <body>
-<div class="app" id="app">
+
+<!-- AUTH OVERLAY -->
+<div id="authOverlay" class="auth-overlay">
+  <div class="auth-card">
+    <h1>Cut<span>Track</span></h1>
+    <p class="text-muted text-small">Sign in to sync your data across devices.</p>
+    <button class="google-btn" id="googleSignInBtn">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+        <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+        <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+        <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+      </svg>
+      Sign in with Google
+    </button>
+    <div id="authError" class="danger-banner hidden mt-3"></div>
+    <p class="text-tiny text-muted mt-3">Your data is private to your Google account.</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app hidden" id="app">
   <div id="flashContainer"></div>
 
   <!-- TODAY -->
   <div id="tab-today" class="tab-panel">
-    <h1>Cut<span>Track</span> <span style="font-size:0.9rem;font-weight:400;color:var(--text-muted);">· today</span></h1>
+    <div class="flex-between" style="margin-bottom:12px;">
+      <h1 style="margin:0;">Cut<span>Track</span></h1>
+      <button class="btn ghost small" id="signOutBtn" title="Sign out">👤</button>
+    </div>
     <div class="card">
       <div class="flex-between"><h3>☀️ Morning weight</h3><span class="badge" id="todayDateLabel">—</span></div>
       <div class="flex-row mt-2">
@@ -433,8 +467,67 @@
     chatHistory: [],
     chartRange: 30,
     mealPlanDays: 1,
-    planCalorieTarget: 1840
+    planCalorieTarget: 1840,
+    signedIn: false
   };
+
+  // ============ AUTH UI ============
+  const authOverlay = document.getElementById('authOverlay');
+  const appRoot = document.getElementById('app');
+  const authError = document.getElementById('authError');
+
+  document.getElementById('googleSignInBtn').onclick = async () => {
+    authError.classList.add('hidden');
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+      await auth.signInWithPopup(provider);
+    } catch (e) {
+      console.warn('Popup failed:', e);
+      // Fallback to redirect (iPhone Safari)
+      if (e.code === 'auth/popup-blocked' ||
+          e.code === 'auth/popup-closed-by-user' ||
+          e.code === 'auth/cancelled-popup-request' ||
+          e.code === 'auth/operation-not-supported-in-this-environment') {
+        try { await auth.signInWithRedirect(provider); }
+        catch (e2) {
+          authError.textContent = '❌ Sign-in failed: ' + (e2.message || e2.code);
+          authError.classList.remove('hidden');
+        }
+      } else if (e.code === 'auth/unauthorized-domain') {
+        authError.textContent = '❌ This domain isn\'t authorized in Firebase. Add dorey227.github.io to Authentication → Settings → Authorized domains.';
+        authError.classList.remove('hidden');
+      } else if (e.code === 'auth/operation-not-allowed') {
+        authError.textContent = '❌ Google sign-in isn\'t enabled. Firebase Console → Authentication → Sign-in method → Google → Enable.';
+        authError.classList.remove('hidden');
+      } else {
+        authError.textContent = '❌ ' + (e.message || e.code || 'Sign-in failed');
+        authError.classList.remove('hidden');
+      }
+    }
+  };
+
+  document.getElementById('signOutBtn').onclick = async () => {
+    if (!confirm('Sign out?')) return;
+    await auth.signOut();
+    location.reload();
+  };
+
+  // Watch auth state
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      state.signedIn = true;
+      authOverlay.classList.add('hidden');
+      appRoot.classList.remove('hidden');
+      await bootApp();
+    } else {
+      state.signedIn = false;
+      authOverlay.classList.remove('hidden');
+      appRoot.classList.add('hidden');
+    }
+  });
+
+  // Handle redirect result
+  auth.getRedirectResult().catch(e => console.warn('Redirect result:', e));
 
   // ============ UTILS ============
   function flash(msg) {
@@ -524,6 +617,9 @@
       logsSnap.forEach(doc => { if (doc.data().mood) state.moodHistory[doc.id] = doc.data().mood; });
     } catch (e) {
       console.warn('Firestore load error', e);
+      if (e.code === 'permission-denied') {
+        flash('❌ Firestore permission denied — check your rules');
+      }
     }
   }
 
@@ -936,154 +1032,246 @@
     });
   }
 
-  document.getElementById('saveWeightBtn').onclick = async () => {
-    const val = parseFloat(document.getElementById('morningWeight').value);
-    if (isNaN(val) || val < 30 || val > 200) return flash('⚠️ Enter valid weight (30-200 kg)');
-    try {
-      await saveWeight(val);
-      flash('✅ Weight saved!'); renderAll();
-    } catch (e) { flash('❌ Save failed'); console.error(e); }
-  };
-
-  document.getElementById('calcBodyFatBtn').onclick = async () => {
-    const waist = parseFloat(document.getElementById('waistInput').value);
-    const neck = parseFloat(document.getElementById('neckInput').value);
-    if (isNaN(waist) || isNaN(neck)) return flash('⚠️ Enter waist and neck in cm');
-    const bf = calcBodyFatNavy(waist, neck, USER.heightCm);
-    if (!bf) return flash('⚠️ Neck must be smaller than waist');
-    const last = state.measurements[state.measurements.length-1];
-    try {
-      if (last) await db.collection('measurements').doc(last.id).update({ waist, neck });
-      else await db.collection('measurements').add({ date: todayKey(), weight: state.todayWeight, waist, neck });
-      flash(`✅ Body fat: ${bf.toFixed(1)}%`);
-      await loadFromFirestore(); renderAll();
-    } catch (e) { flash('❌ Save failed'); console.error(e); }
-  };
-
-  document.querySelectorAll('#moodRow button').forEach(btn => {
-    btn.onclick = async () => {
-      state.mood = btn.dataset.mood;
-      renderToday(); await saveDailyLog();
-      flash(`Mood logged: ${state.mood}`);
+  function initHandlers() {
+    document.getElementById('saveWeightBtn').onclick = async () => {
+      const val = parseFloat(document.getElementById('morningWeight').value);
+      if (isNaN(val) || val < 30 || val > 200) return flash('⚠️ Enter valid weight (30-200 kg)');
+      try {
+        await saveWeight(val);
+        flash('✅ Weight saved!'); renderAll();
+      } catch (e) { flash('❌ Save failed'); console.error(e); }
     };
-  });
 
-  document.getElementById('planCalorieSlider').oninput = (e) => {
-    state.planCalorieTarget = parseInt(e.target.value);
-    renderPlanSlider();
-  };
-
-  document.getElementById('generatePlanBtn').onclick = async () => {
-    const btn = document.getElementById('generatePlanBtn');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Generating...';
-    try {
-      const weight = state.todayWeight || 80;
-      const target = state.planCalorieTarget;
-      const protein = Math.round(weight * PROTEIN_PER_KG);
-      const days = state.mealPlanDays;
-      const diet = document.getElementById('dietPreference').value;
-      const budget = document.getElementById('budgetLevel').value;
-
-      const systemPrompt =
-        'You are a nutrition assistant. Respond ONLY with valid JSON, no markdown fences, no prose.';
-      const userPrompt =
-        `Generate a ${days}-day meal plan for a 27yo male, 175cm, ${weight}kg, works a physical job on his feet. ` +
-        `Target ${target} kcal/day, protein ${protein}g/day. Diet style: ${diet}. Budget: ${budget}. ` +
-        (target <= 1700
-          ? 'This is an aggressive deficit — use high-volume, low-calorie foods and note in each description that taste is sacrificed.'
-          : 'This is a moderate deficit — keep meals satisfying.') +
-        ` Return JSON: {"meals":[{"id":"m1","name":"...","time":"07:30","calories":320,"protein":28,"carbs":35,"fat":8,"description":"..."}, ...]}. ` +
-        `For multi-day plans use ids like "d1m1","d1m2","d2m1".`;
-
-      const raw = await callDeepSeek([
-        { role:'system', content: systemPrompt },
-        { role:'user', content: userPrompt }
-      ], { temperature: 0.5, maxTokens: 3000 });
-      const parsed = extractJSON(raw);
-      if (!parsed.meals || !parsed.meals.length) throw new Error('No meals in response');
-      await db.collection('mealPlan').doc('current').set(parsed);
-      state.mealPlan = parsed;
-      flash('✨ Plan generated!'); renderMealPlan(); renderToday();
-    } catch (e) {
-      console.error(e); flash('❌ AI error: ' + (e.message || 'unknown'));
-    } finally {
-      btn.disabled = false; btn.textContent = '✨ Generate Plan with DeepSeek';
-    }
-  };
-
-  document.getElementById('regeneratePlanBtn').onclick = () => {
-    document.getElementById('generatePlanBtn').click();
-  };
-
-  document.querySelectorAll('#mealPlanDuration button').forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll('#mealPlanDuration button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.mealPlanDays = parseInt(btn.dataset.days);
+    document.getElementById('calcBodyFatBtn').onclick = async () => {
+      const waist = parseFloat(document.getElementById('waistInput').value);
+      const neck = parseFloat(document.getElementById('neckInput').value);
+      if (isNaN(waist) || isNaN(neck)) return flash('⚠️ Enter waist and neck in cm');
+      const bf = calcBodyFatNavy(waist, neck, USER.heightCm);
+      if (!bf) return flash('⚠️ Neck must be smaller than waist');
+      const last = state.measurements[state.measurements.length-1];
+      try {
+        if (last) await db.collection('measurements').doc(last.id).update({ waist, neck });
+        else await db.collection('measurements').add({ date: todayKey(), weight: state.todayWeight, waist, neck });
+        flash(`✅ Body fat: ${bf.toFixed(1)}%`);
+        await loadFromFirestore(); renderAll();
+      } catch (e) { flash('❌ Save failed'); console.error(e); }
     };
-  });
 
-  document.getElementById('snapBtn').onclick = () => {
-    document.getElementById('snapInput').click();
-  };
-
-  document.getElementById('snapInput').onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const scale = Math.min(600 / img.width, 600 / img.height, 1);
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        state.snapImageData = dataUrl;
-        const preview = document.getElementById('snapPreview');
-        preview.src = dataUrl;
-        preview.classList.remove('hidden');
-        document.getElementById('analyzeDishBtn').classList.remove('hidden');
+    document.querySelectorAll('#moodRow button').forEach(btn => {
+      btn.onclick = async () => {
+        state.mood = btn.dataset.mood;
+        renderToday(); await saveDailyLog();
+        flash(`Mood logged: ${state.mood}`);
       };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
+    });
 
-  document.getElementById('analyzeDishBtn').onclick = async () => {
-    if (!state.snapImageData) return flash('⚠️ No image');
-    const btn = document.getElementById('analyzeDishBtn');
-    const spinner = document.getElementById('snapAnalyzing');
-    btn.disabled = true; btn.classList.add('hidden'); spinner.classList.remove('hidden');
-    try {
-      const messages = [
-        { role:'system', content:'You are a chef and nutritionist. Identify dishes from photos and respond ONLY with valid JSON, no markdown fences, no prose.' },
-        { role:'user', content: [
-          { type:'text', text:
-            'Identify this dish. Return JSON exactly like: ' +
-            '{"dish":"Name","variants":[' +
-            '{"calories":400,"name":"...","ingredients":["..."],"instructions":"...","protein":30,"carbs":40,"fat":12,"taste_note":"..."},' +
-            '...one variant for each of 400, 500, 600, 700, 800 calories]}. ' +
-            'For the 400 and 500 variants, use honest swaps: cauliflower rice, Greek yogurt, lean mince, no oil, less cheese. ' +
-            'In the taste_note field, describe honestly how the taste/richness is reduced. ' +
-            'Do NOT claim any ingredient "burns fat". Only a calorie deficit burns fat.' },
-          { type:'image_url', image_url:{ url: state.snapImageData } }
-        ]}
-      ];
-      const raw = await callDeepSeek(messages, { temperature: 0.4, maxTokens: 3500 });
-      const parsed = extractJSON(raw);
-      if (!parsed.variants || !parsed.variants.length) throw new Error('No variants');
-      state.snapVariants = parsed;
-      renderSnapResult(parsed);
-      flash('✨ AI estimated!');
-    } catch (e) {
-      console.error(e); flash('❌ AI error: ' + (e.message || 'unknown'));
-    } finally {
-      btn.disabled = false; btn.classList.remove('hidden'); spinner.classList.add('hidden');
-    }
-  };
+    document.getElementById('planCalorieSlider').oninput = (e) => {
+      state.planCalorieTarget = parseInt(e.target.value);
+      renderPlanSlider();
+    };
+
+    document.getElementById('generatePlanBtn').onclick = async () => {
+      const btn = document.getElementById('generatePlanBtn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Generating...';
+      try {
+        const weight = state.todayWeight || 80;
+        const target = state.planCalorieTarget;
+        const protein = Math.round(weight * PROTEIN_PER_KG);
+        const days = state.mealPlanDays;
+        const diet = document.getElementById('dietPreference').value;
+        const budget = document.getElementById('budgetLevel').value;
+
+        const systemPrompt =
+          'You are a nutrition assistant. Respond ONLY with valid JSON, no markdown fences, no prose.';
+        const userPrompt =
+          `Generate a ${days}-day meal plan for a 27yo male, 175cm, ${weight}kg, works a physical job on his feet. ` +
+          `Target ${target} kcal/day, protein ${protein}g/day. Diet style: ${diet}. Budget: ${budget}. ` +
+          (target <= 1700
+            ? 'This is an aggressive deficit — use high-volume, low-calorie foods and note in each description that taste is sacrificed.'
+            : 'This is a moderate deficit — keep meals satisfying.') +
+          ` Return JSON: {"meals":[{"id":"m1","name":"...","time":"07:30","calories":320,"protein":28,"carbs":35,"fat":8,"description":"..."}, ...]}. ` +
+          `For multi-day plans use ids like "d1m1","d1m2","d2m1".`;
+
+        const raw = await callDeepSeek([
+          { role:'system', content: systemPrompt },
+          { role:'user', content: userPrompt }
+        ], { temperature: 0.5, maxTokens: 3000 });
+        const parsed = extractJSON(raw);
+        if (!parsed.meals || !parsed.meals.length) throw new Error('No meals in response');
+        await db.collection('mealPlan').doc('current').set(parsed);
+        state.mealPlan = parsed;
+        flash('✨ Plan generated!'); renderMealPlan(); renderToday();
+      } catch (e) {
+        console.error(e); flash('❌ AI error: ' + (e.message || 'unknown'));
+      } finally {
+        btn.disabled = false; btn.textContent = '✨ Generate Plan with DeepSeek';
+      }
+    };
+
+    document.getElementById('regeneratePlanBtn').onclick = () => {
+      document.getElementById('generatePlanBtn').click();
+    };
+
+    document.querySelectorAll('#mealPlanDuration button').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('#mealPlanDuration button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.mealPlanDays = parseInt(btn.dataset.days);
+      };
+    });
+
+    document.getElementById('snapBtn').onclick = () => {
+      document.getElementById('snapInput').click();
+    };
+
+    document.getElementById('snapInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const scale = Math.min(600 / img.width, 600 / img.height, 1);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          state.snapImageData = dataUrl;
+          const preview = document.getElementById('snapPreview');
+          preview.src = dataUrl;
+          preview.classList.remove('hidden');
+          document.getElementById('analyzeDishBtn').classList.remove('hidden');
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    document.getElementById('analyzeDishBtn').onclick = async () => {
+      if (!state.snapImageData) return flash('⚠️ No image');
+      const btn = document.getElementById('analyzeDishBtn');
+      const spinner = document.getElementById('snapAnalyzing');
+      btn.disabled = true; btn.classList.add('hidden'); spinner.classList.remove('hidden');
+      try {
+        const messages = [
+          { role:'system', content:'You are a chef and nutritionist. Identify dishes from photos and respond ONLY with valid JSON, no markdown fences, no prose.' },
+          { role:'user', content: [
+            { type:'text', text:
+              'Identify this dish. Return JSON exactly like: ' +
+              '{"dish":"Name","variants":[' +
+              '{"calories":400,"name":"...","ingredients":["..."],"instructions":"...","protein":30,"carbs":40,"fat":12,"taste_note":"..."},' +
+              '...one variant for each of 400, 500, 600, 700, 800 calories]}. ' +
+              'For the 400 and 500 variants, use honest swaps: cauliflower rice, Greek yogurt, lean mince, no oil, less cheese. ' +
+              'In the taste_note field, describe honestly how the taste/richness is reduced. ' +
+              'Do NOT claim any ingredient "burns fat". Only a calorie deficit burns fat.' },
+            { type:'image_url', image_url:{ url: state.snapImageData } }
+          ]}
+        ];
+        const raw = await callDeepSeek(messages, { temperature: 0.4, maxTokens: 3500 });
+        const parsed = extractJSON(raw);
+        if (!parsed.variants || !parsed.variants.length) throw new Error('No variants');
+        state.snapVariants = parsed;
+        renderSnapResult(parsed);
+        flash('✨ AI estimated!');
+      } catch (e) {
+        console.error(e); flash('❌ AI error: ' + (e.message || 'unknown'));
+      } finally {
+        btn.disabled = false; btn.classList.remove('hidden'); spinner.classList.add('hidden');
+      }
+    };
+
+    document.getElementById('addRecipeBtn').onclick = () => {
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal">
+          <div class="flex-between mb-2">
+            <h3>Add Recipe</h3>
+            <button class="btn ghost small" id="closeModal">✕</button>
+          </div>
+          <input type="text" id="rName" placeholder="Recipe name" class="mb-2">
+          <div class="flex-row mb-2">
+            <input type="number" id="rCal" placeholder="Calories">
+            <input type="number" id="rProtein" placeholder="Protein g">
+          </div>
+          <div class="flex-row mb-2">
+            <input type="number" id="rCarbs" placeholder="Carbs g">
+            <input type="number" id="rFat" placeholder="Fat g">
+          </div>
+          <textarea id="rIngredients" placeholder="Ingredients (one per line)"></textarea>
+          <textarea id="rInstructions" placeholder="Instructions" class="mt-2"></textarea>
+          <button class="btn block mt-3" id="saveNewRecipe">Save Recipe</button>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.querySelector('#closeModal').onclick = () => modal.remove();
+      modal.querySelector('#saveNewRecipe').onclick = async () => {
+        const name = modal.querySelector('#rName').value.trim();
+        if (!name) return flash('⚠️ Name required');
+        await db.collection('recipes').add({
+          name,
+          calories: parseInt(modal.querySelector('#rCal').value) || 0,
+          protein: parseInt(modal.querySelector('#rProtein').value) || 0,
+          carbs: parseInt(modal.querySelector('#rCarbs').value) || 0,
+          fat: parseInt(modal.querySelector('#rFat').value) || 0,
+          ingredients: modal.querySelector('#rIngredients').value.split('\n').filter(x => x.trim()),
+          instructions: modal.querySelector('#rInstructions').value,
+          favorite: false, tags: ['manual'], date: todayKey()
+        });
+        flash('✅ Recipe added!'); modal.remove();
+        await loadFromFirestore(); renderCookbook();
+      };
+    };
+
+    document.getElementById('recipeSearch').oninput = renderCookbook;
+    document.getElementById('recipeFilter').onchange = renderCookbook;
+
+    document.getElementById('chatSendBtn').onclick = () => sendChat(document.getElementById('chatInput').value);
+    document.getElementById('chatInput').onkeydown = (e) => {
+      if (e.key === 'Enter') sendChat(e.target.value);
+    };
+    document.querySelectorAll('.quick-prompt').forEach(btn => {
+      btn.onclick = () => sendChat(btn.dataset.prompt);
+    });
+
+    document.querySelectorAll('#chartRange button').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('#chartRange button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.chartRange = btn.dataset.range;
+        renderProgress();
+      };
+    });
+
+    document.getElementById('addShoppingBtn').onclick = async () => {
+      const val = document.getElementById('newShoppingItem').value.trim();
+      if (!val) return;
+      state.shoppingList.push(val);
+      document.getElementById('newShoppingItem').value = '';
+      await db.collection('snacks').doc('shoppingList').set(
+        { shoppingList: state.shoppingList }, { merge: true });
+      renderLog();
+    };
+
+    document.getElementById('exportDataBtn').onclick = () => {
+      const data = {
+        exported: new Date().toISOString(),
+        measurements: state.measurements,
+        dailyLog: state.dailyLog,
+        mealPlan: state.mealPlan,
+        recipes: state.recipes,
+        shoppingList: state.shoppingList,
+        chatHistory: state.chatHistory
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `cuttrack-backup-${todayKey()}.json`;
+      a.click(); URL.revokeObjectURL(url);
+      flash('📤 Backup downloaded!');
+    };
+  }
 
   function renderSnapResult(data) {
     const container = document.getElementById('snapResultContainer');
@@ -1156,51 +1344,6 @@
     };
   }
 
-  document.getElementById('addRecipeBtn').onclick = () => {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal">
-        <div class="flex-between mb-2">
-          <h3>Add Recipe</h3>
-          <button class="btn ghost small" id="closeModal">✕</button>
-        </div>
-        <input type="text" id="rName" placeholder="Recipe name" class="mb-2">
-        <div class="flex-row mb-2">
-          <input type="number" id="rCal" placeholder="Calories">
-          <input type="number" id="rProtein" placeholder="Protein g">
-        </div>
-        <div class="flex-row mb-2">
-          <input type="number" id="rCarbs" placeholder="Carbs g">
-          <input type="number" id="rFat" placeholder="Fat g">
-        </div>
-        <textarea id="rIngredients" placeholder="Ingredients (one per line)"></textarea>
-        <textarea id="rInstructions" placeholder="Instructions" class="mt-2"></textarea>
-        <button class="btn block mt-3" id="saveNewRecipe">Save Recipe</button>
-      </div>`;
-    document.body.appendChild(modal);
-    modal.querySelector('#closeModal').onclick = () => modal.remove();
-    modal.querySelector('#saveNewRecipe').onclick = async () => {
-      const name = modal.querySelector('#rName').value.trim();
-      if (!name) return flash('⚠️ Name required');
-      await db.collection('recipes').add({
-        name,
-        calories: parseInt(modal.querySelector('#rCal').value) || 0,
-        protein: parseInt(modal.querySelector('#rProtein').value) || 0,
-        carbs: parseInt(modal.querySelector('#rCarbs').value) || 0,
-        fat: parseInt(modal.querySelector('#rFat').value) || 0,
-        ingredients: modal.querySelector('#rIngredients').value.split('\n').filter(x => x.trim()),
-        instructions: modal.querySelector('#rInstructions').value,
-        favorite: false, tags: ['manual'], date: todayKey()
-      });
-      flash('✅ Recipe added!'); modal.remove();
-      await loadFromFirestore(); renderCookbook();
-    };
-  };
-
-  document.getElementById('recipeSearch').oninput = renderCookbook;
-  document.getElementById('recipeFilter').onchange = renderCookbook;
-
   async function sendChat(text) {
     if (!text.trim()) return;
     state.chatHistory.push({ role:'user', content: text });
@@ -1253,65 +1396,17 @@
     }
   }
 
-  document.getElementById('chatSendBtn').onclick = () => sendChat(document.getElementById('chatInput').value);
-  document.getElementById('chatInput').onkeydown = (e) => {
-    if (e.key === 'Enter') sendChat(e.target.value);
-  };
-  document.querySelectorAll('.quick-prompt').forEach(btn => {
-    btn.onclick = () => sendChat(btn.dataset.prompt);
-  });
-
-  document.querySelectorAll('#chartRange button').forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll('#chartRange button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.chartRange = btn.dataset.range;
-      renderProgress();
-    };
-  });
-
-  document.getElementById('addShoppingBtn').onclick = async () => {
-    const val = document.getElementById('newShoppingItem').value.trim();
-    if (!val) return;
-    state.shoppingList.push(val);
-    document.getElementById('newShoppingItem').value = '';
-    await db.collection('snacks').doc('shoppingList').set(
-      { shoppingList: state.shoppingList }, { merge: true });
-    renderLog();
-  };
-
-  document.getElementById('exportDataBtn').onclick = () => {
-    const data = {
-      exported: new Date().toISOString(),
-      measurements: state.measurements,
-      dailyLog: state.dailyLog,
-      mealPlan: state.mealPlan,
-      recipes: state.recipes,
-      shoppingList: state.shoppingList,
-      chatHistory: state.chatHistory
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `cuttrack-backup-${todayKey()}.json`;
-    a.click(); URL.revokeObjectURL(url);
-    flash('📤 Backup downloaded!');
-  };
-
-  async function boot() {
+  let appBooted = false;
+  async function bootApp() {
+    if (appBooted) return;
+    appBooted = true;
     initTabs();
-    try {
-      await auth.signInAnonymously();
-    } catch (e) {
-      console.warn('Anon auth failed (enable it in Firebase Console):', e);
-    }
+    initHandlers();
     await loadFromFirestore();
     const { target } = getSafeCalorieTarget(state.todayWeight);
     state.planCalorieTarget = target;
     renderAll();
   }
-
-  boot();
 })();
 </script>
 </body>
