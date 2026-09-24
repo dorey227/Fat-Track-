@@ -80,10 +80,10 @@
     max-height:220px; object-fit:cover; width:100%; }
   .tab-bar { position:fixed; bottom:0; left:0; right:0; background:#0f1117; border-top:1px solid #1f232e;
     display:flex; justify-content:space-around; padding:8px 4px 12px; z-index:100;
-    backdrop-filter:blur(8px); overflow-x:auto; }
+    backdrop-filter:blur(8px); }
   .tab-item { display:flex; flex-direction:column; align-items:center; font-size:0.65rem; color:#6b7280;
-    gap:2px; padding:6px 8px; border-radius:40px; transition:all 0.1s; cursor:pointer; border:none;
-    background:transparent; font-weight:500; flex-shrink:0; }
+    gap:2px; padding:6px 10px; border-radius:40px; transition:all 0.1s; cursor:pointer; border:none;
+    background:transparent; font-weight:500; flex:1; }
   .tab-item.active { color:var(--accent); }
   .tab-item .icon { font-size:1.3rem; line-height:1; }
   .flash { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#1e212a; color:#fff;
@@ -97,9 +97,11 @@
   .text-center { text-align:center; }
   .mt-1 { margin-top:4px; } .mt-2 { margin-top:8px; } .mt-3 { margin-top:14px; }
   .mb-2 { margin-bottom:8px; } .gap-2 { gap:8px; }
-  .shopping-item { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #222630;
-    font-size:0.9rem; align-items:center; }
-  .shopping-item input[type="checkbox"] { width:20px; height:20px; accent-color:var(--accent); }
+  .shopping-item { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #222630;
+    font-size:0.95rem; align-items:center; gap:10px; }
+  .shopping-item.checked { opacity:0.4; text-decoration:line-through; }
+  .shopping-item input[type="checkbox"] { width:22px; height:22px; accent-color:var(--accent); flex-shrink:0; }
+  .shopping-item .label { flex:1; }
   .honesty-note { background:#1f1a0e; border-left:4px solid var(--warning); padding:10px 14px;
     border-radius:10px; font-size:0.8rem; color:#e0c9a0; margin-top:12px; }
   canvas { max-width:100%; }
@@ -109,26 +111,6 @@
   .recipe-card:active { transform:scale(0.98); }
   .recipe-tag { display:inline-block; background:#2a2e3a; border-radius:20px; padding:3px 10px;
     font-size:0.7rem; color:var(--text-muted); margin-right:6px; margin-top:6px; }
-  .chat-container { display:flex; flex-direction:column; height:65vh; background:var(--bg-card);
-    border-radius:20px; border:1px solid var(--border); overflow:hidden; }
-  .chat-messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
-  .chat-msg { max-width:85%; padding:12px 16px; border-radius:18px; font-size:0.9rem; line-height:1.4;
-    word-wrap:break-word; white-space:pre-wrap; }
-  .chat-msg.user { align-self:flex-end; background:var(--accent); color:#0a0a0f; border-bottom-right-radius:4px; }
-  .chat-msg.ai { align-self:flex-start; background:var(--bg-elev); color:#eaeef2;
-    border-bottom-left-radius:4px; border:1px solid #2f3541; }
-  .chat-msg.system { align-self:center; background:#1a253d; color:#c5d9f5; font-size:0.8rem;
-    text-align:center; border-radius:12px; }
-  .chat-input-row { display:flex; gap:8px; padding:12px; background:#0f1117; border-top:1px solid var(--border); }
-  .chat-input-row input { flex:1; border-radius:30px; padding:12px 16px; font-size:0.9rem; }
-  .chat-send-btn { background:var(--accent); border:none; border-radius:50%; width:46px; height:46px;
-    font-size:1.2rem; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
-  .quick-prompts { display:flex; gap:8px; overflow-x:auto; padding:8px 12px; background:#0f1117;
-    border-top:1px solid var(--border); }
-  .quick-prompts::-webkit-scrollbar { display:none; }
-  .quick-prompt { background:var(--bg-elev); border:1px solid var(--border); color:var(--text-muted);
-    border-radius:20px; padding:8px 14px; font-size:0.8rem; cursor:pointer; white-space:nowrap; transition:all 0.15s; }
-  .quick-prompt:active { background:var(--accent); color:#0a0a0f; }
   .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1500; display:flex;
     align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
   .modal { background:var(--bg-card); border-radius:24px; padding:24px 20px; max-width:500px; width:100%;
@@ -162,6 +144,8 @@
     transition:all 0.15s; }
   .google-btn:active { transform:scale(0.98); opacity:0.9; }
   .google-btn svg { width:20px; height:20px; }
+  .snap-panel { background:#1a1520; border:1px dashed #4a3a2a; border-radius:16px; padding:16px;
+    margin-bottom:12px; }
 </style>
 </head>
 <body>
@@ -311,22 +295,26 @@
     </div>
   </div>
 
-  <!-- SNAP -->
-  <div id="tab-snap" class="tab-panel hidden">
-    <h2>📸 Snap a dish</h2>
-    <div class="card">
+  <!-- COOKBOOK (with Snap built in) -->
+  <div id="tab-cookbook" class="tab-panel hidden">
+    <h2>📖 Cookbook</h2>
+
+    <!-- Snap panel -->
+    <div class="snap-panel">
+      <div class="flex-between mb-2">
+        <h3 style="margin:0;">📸 Snap a dish</h3>
+        <span class="text-tiny text-muted">AI → recipe</span>
+      </div>
       <input type="file" id="snapInput" accept="image/*" capture="environment" style="display:none;">
       <button class="btn block" id="snapBtn">📷 Take / Upload photo</button>
       <img id="snapPreview" class="snap-preview hidden" alt="preview">
       <div id="snapAnalyzing" class="text-center mt-2 hidden"><span class="spinner"></span> <span class="text-muted text-small">Analyzing with AI...</span></div>
       <button class="btn purple block mt-2 hidden" id="analyzeDishBtn">✨ Identify & generate recipes</button>
     </div>
-    <div id="snapResultContainer"></div>
-  </div>
 
-  <!-- COOKBOOK -->
-  <div id="tab-cookbook" class="tab-panel hidden">
-    <h2>📖 Cookbook</h2>
+    <div id="snapResultContainer"></div>
+
+    <!-- Recipe library -->
     <div class="card">
       <div class="flex-row">
         <input type="text" id="recipeSearch" placeholder="🔍 Search recipes..." style="flex:3;">
@@ -346,23 +334,28 @@
     <div id="cookbookList"></div>
   </div>
 
-  <!-- CHAT -->
-  <div id="tab-chat" class="tab-panel hidden">
-    <h2>🤖 AI Coach</h2>
-    <div class="chat-container">
-      <div class="chat-messages" id="chatMessages"></div>
-      <div class="quick-prompts">
-        <button class="quick-prompt" data-prompt="How am I doing this week?">📊 Weekly review</button>
-        <button class="quick-prompt" data-prompt="Am I eating enough protein?">🥩 Protein check</button>
-        <button class="quick-prompt" data-prompt="Suggest a low-cal dinner idea">🍽️ Dinner idea</button>
-        <button class="quick-prompt" data-prompt="Why has my weight stalled?">📉 Weight stall</button>
-        <button class="quick-prompt" data-prompt="How many calories should I eat today?">🔢 Calorie target</button>
-        <button class="quick-prompt" data-prompt="Review my last 7 days of data">📅 Last 7 days</button>
-        <button class="quick-prompt" data-prompt="Is my current rate of loss safe?">🛡️ Safety check</button>
+  <!-- SHOPPING -->
+  <div id="tab-shopping" class="tab-panel hidden">
+    <h2>🛒 Shopping List</h2>
+    <div class="card">
+      <div class="flex-row">
+        <input type="text" id="newShoppingItem" placeholder="Add item..." style="flex:1;">
+        <button class="btn small" id="addShoppingBtn">Add</button>
       </div>
-      <div class="chat-input-row">
-        <input type="text" id="chatInput" placeholder="Ask your coach anything...">
-        <button class="chat-send-btn" id="chatSendBtn">➤</button>
+      <div id="shoppingListContainer" class="mt-2"></div>
+      <div class="flex-row mt-3">
+        <button class="btn ghost small block" id="clearCheckedBtn">Clear checked items</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Quick add</h3>
+      <div class="flex-row" id="quickAddRow">
+        <button class="btn ghost small" data-quick="Chicken breast">Chicken</button>
+        <button class="btn ghost small" data-quick="Greek yogurt">Greek yogurt</button>
+        <button class="btn ghost small" data-quick="Eggs">Eggs</button>
+        <button class="btn ghost small" data-quick="Broccoli">Broccoli</button>
+        <button class="btn ghost small" data-quick="Salmon fillet">Salmon</button>
+        <button class="btn ghost small" data-quick="Oats">Oats</button>
       </div>
     </div>
   </div>
@@ -391,33 +384,12 @@
     <div class="card"><h3>🏆 Achievements</h3><div id="achievementsList"></div></div>
   </div>
 
-  <!-- LOG -->
-  <div id="tab-log" class="tab-panel hidden">
-    <h2>📋 Log & Tools</h2>
-    <div class="card"><h3>Recent weigh-ins</h3><div id="recentWeighins"></div></div>
-    <div class="card"><h3>Habit history</h3><div id="habitHistory"></div></div>
-    <div class="card">
-      <h3>Shopping list</h3>
-      <div id="shoppingListContainer"></div>
-      <div class="flex-row mt-2">
-        <input type="text" id="newShoppingItem" placeholder="Add item..." style="flex:1;">
-        <button class="btn small" id="addShoppingBtn">Add</button>
-      </div>
-    </div>
-    <div class="card">
-      <h3>📤 Export Data</h3>
-      <button class="btn secondary block" id="exportDataBtn">Download JSON backup</button>
-    </div>
-  </div>
-
   <div class="tab-bar">
     <button class="tab-item active" data-tab="today"><span class="icon">☀️</span>Today</button>
     <button class="tab-item" data-tab="mealplan"><span class="icon">🍱</span>Plan</button>
-    <button class="tab-item" data-tab="snap"><span class="icon">📸</span>Snap</button>
     <button class="tab-item" data-tab="cookbook"><span class="icon">📖</span>Cookbook</button>
-    <button class="tab-item" data-tab="chat"><span class="icon">🤖</span>Coach</button>
+    <button class="tab-item" data-tab="shopping"><span class="icon">🛒</span>Shopping</button>
     <button class="tab-item" data-tab="progress"><span class="icon">📈</span>Progress</button>
-    <button class="tab-item" data-tab="log"><span class="icon">📋</span>Log</button>
   </div>
 </div>
 
@@ -438,13 +410,7 @@
 
   // ============ CONFIG ============
   const PROXY_URL = 'https://fat-track-neon.vercel.app/api/chat';
-
-  const USER = {
-    birthDate: new Date(1998, 1, 4),
-    heightCm: 175,
-    activityFactor: 1.55,
-    goalWeight: 75
-  };
+  const USER = { birthDate: new Date(1998, 1, 4), heightCm: 175, activityFactor: 1.55, goalWeight: 75 };
   const CALORIE_FLOOR = 1500;
   const PROTEIN_PER_KG = 2.2;
 
@@ -461,17 +427,16 @@
     snapImageData: null,
     snapVariants: null,
     shoppingList: [],
+    shoppingChecked: {},
     measurements: [],
     dailyLog: {},
     recipes: [],
-    chatHistory: [],
     chartRange: 30,
     mealPlanDays: 1,
-    planCalorieTarget: 1840,
-    signedIn: false
+    planCalorieTarget: 1840
   };
 
-  // ============ AUTH UI ============
+  // ============ AUTH ============
   const authOverlay = document.getElementById('authOverlay');
   const appRoot = document.getElementById('app');
   const authError = document.getElementById('authError');
@@ -479,28 +444,16 @@
   document.getElementById('googleSignInBtn').onclick = async () => {
     authError.classList.add('hidden');
     const provider = new firebase.auth.GoogleAuthProvider();
-    try {
-      await auth.signInWithPopup(provider);
-    } catch (e) {
-      console.warn('Popup failed:', e);
-      // Fallback to redirect (iPhone Safari)
-      if (e.code === 'auth/popup-blocked' ||
-          e.code === 'auth/popup-closed-by-user' ||
-          e.code === 'auth/cancelled-popup-request' ||
-          e.code === 'auth/operation-not-supported-in-this-environment') {
+    try { await auth.signInWithPopup(provider); }
+    catch (e) {
+      if (['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request','auth/operation-not-supported-in-this-environment'].includes(e.code)) {
         try { await auth.signInWithRedirect(provider); }
-        catch (e2) {
-          authError.textContent = '❌ Sign-in failed: ' + (e2.message || e2.code);
-          authError.classList.remove('hidden');
-        }
+        catch (e2) { authError.textContent = '❌ ' + (e2.message || e2.code); authError.classList.remove('hidden'); }
       } else if (e.code === 'auth/unauthorized-domain') {
-        authError.textContent = '❌ This domain isn\'t authorized in Firebase. Add dorey227.github.io to Authentication → Settings → Authorized domains.';
-        authError.classList.remove('hidden');
-      } else if (e.code === 'auth/operation-not-allowed') {
-        authError.textContent = '❌ Google sign-in isn\'t enabled. Firebase Console → Authentication → Sign-in method → Google → Enable.';
+        authError.textContent = '❌ Add dorey227.github.io to Firebase → Authentication → Settings → Authorized domains';
         authError.classList.remove('hidden');
       } else {
-        authError.textContent = '❌ ' + (e.message || e.code || 'Sign-in failed');
+        authError.textContent = '❌ ' + (e.message || e.code);
         authError.classList.remove('hidden');
       }
     }
@@ -512,21 +465,16 @@
     location.reload();
   };
 
-  // Watch auth state
   auth.onAuthStateChanged(async (user) => {
     if (user) {
-      state.signedIn = true;
       authOverlay.classList.add('hidden');
       appRoot.classList.remove('hidden');
       await bootApp();
     } else {
-      state.signedIn = false;
       authOverlay.classList.remove('hidden');
       appRoot.classList.add('hidden');
     }
   });
-
-  // Handle redirect result
   auth.getRedirectResult().catch(e => console.warn('Redirect result:', e));
 
   // ============ UTILS ============
@@ -603,7 +551,11 @@
         state.todayWeight = state.measurements[state.measurements.length-1].weight || 80.0;
       }
       if (planSnap.exists) state.mealPlan = planSnap.data();
-      if (snackSnap.exists) state.shoppingList = snackSnap.data().shoppingList || [];
+      if (snackSnap.exists) {
+        const sd = snackSnap.data();
+        state.shoppingList = sd.shoppingList || [];
+        state.shoppingChecked = sd.shoppingChecked || {};
+      }
       state.recipes = recipesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
       state.dailyLog = {};
       logsSnap.forEach(doc => { state.dailyLog[doc.id] = doc.data(); });
@@ -617,9 +569,7 @@
       logsSnap.forEach(doc => { if (doc.data().mood) state.moodHistory[doc.id] = doc.data().mood; });
     } catch (e) {
       console.warn('Firestore load error', e);
-      if (e.code === 'permission-denied') {
-        flash('❌ Firestore permission denied — check your rules');
-      }
+      if (e.code === 'permission-denied') flash('❌ Firestore permission denied');
     }
   }
 
@@ -628,11 +578,8 @@
     const mealsEaten = Object.keys(state.eatenMeals).filter(id => state.eatenMeals[id]);
     try {
       await db.collection('dailyLog').doc(today).set({
-        habits: state.habits,
-        mealsEaten,
-        water: state.waterGlasses,
-        mood: state.mood,
-        weight: state.todayWeight
+        habits: state.habits, mealsEaten, water: state.waterGlasses,
+        mood: state.mood, weight: state.todayWeight
       }, { merge: true });
     } catch (e) { console.warn('saveDailyLog error', e); }
   }
@@ -640,16 +587,13 @@
   async function saveWeight(weight) {
     const today = todayKey();
     const existing = state.measurements.find(m => m.date === today);
-    if (existing) {
-      await db.collection('measurements').doc(existing.id).update({ weight });
-    } else {
-      await db.collection('measurements').add({ date: today, weight });
-    }
+    if (existing) await db.collection('measurements').doc(existing.id).update({ weight });
+    else await db.collection('measurements').add({ date: today, weight });
     state.todayWeight = weight;
     await loadFromFirestore();
   }
 
-  // ============ DEEPSEEK PROXY ============
+  // ============ DEEPSEEK ============
   async function callDeepSeek(messages, opts = {}) {
     const res = await fetch(PROXY_URL, {
       method: 'POST',
@@ -798,7 +742,7 @@
     else if (filter === 'saved') filtered = filtered.filter(r => r.favorite);
     const el = document.getElementById('cookbookList');
     if (!filtered.length) {
-      el.innerHTML = `<div class="card text-muted">No recipes found. Snap a dish to add one!</div>`;
+      el.innerHTML = `<div class="card text-muted">No recipes yet. Snap a dish or tap + Add.</div>`;
       return;
     }
     el.innerHTML = filtered.map(r => `
@@ -857,8 +801,8 @@
     modal.querySelector('#shoppingRecipeBtn').onclick = async () => {
       state.shoppingList = [...new Set([...state.shoppingList, ...(r.ingredients||[])])];
       await db.collection('snacks').doc('shoppingList').set(
-        { shoppingList: state.shoppingList }, { merge: true });
-      flash('🛒 Added to shopping list!'); renderLog();
+        { shoppingList: state.shoppingList, shoppingChecked: state.shoppingChecked }, { merge: true });
+      flash('🛒 Added to shopping list!'); renderShopping();
     };
     modal.querySelector('#planThisBtn').onclick = async () => {
       const newPlan = { meals: [{
@@ -879,12 +823,42 @@
     };
   }
 
-  function renderChat() {
-    const el = document.getElementById('chatMessages');
-    el.innerHTML = state.chatHistory.length
-      ? state.chatHistory.map(m => `<div class="chat-msg ${m.role}">${m.content}</div>`).join('')
-      : `<div class="chat-msg system">👋 Hi! I'm your AI coach. I can see your weight, habits, meals, mood, and trend. Ask me anything!</div>`;
-    el.scrollTop = el.scrollHeight;
+  function renderShopping() {
+    const el = document.getElementById('shoppingListContainer');
+    if (!state.shoppingList.length) {
+      el.innerHTML = '<div class="text-muted text-small">Shopping list empty. Add items above or snap a dish to auto-fill.</div>';
+      return;
+    }
+    el.innerHTML = state.shoppingList.map((item, i) => {
+      const checked = !!state.shoppingChecked[item];
+      return `<div class="shopping-item ${checked ? 'checked' : ''}">
+        <input type="checkbox" data-idx="${i}" ${checked ? 'checked' : ''}>
+        <span class="label">${item}</span>
+        <button class="btn ghost small" data-remove="${i}" style="padding:4px 10px;">✕</button>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.onchange = async () => {
+        const idx = parseInt(cb.dataset.idx);
+        const item = state.shoppingList[idx];
+        if (cb.checked) state.shoppingChecked[item] = true;
+        else delete state.shoppingChecked[item];
+        await db.collection('snacks').doc('shoppingList').set(
+          { shoppingChecked: state.shoppingChecked }, { merge: true });
+        renderShopping();
+      };
+    });
+    el.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.onclick = async () => {
+        const idx = parseInt(btn.dataset.remove);
+        const item = state.shoppingList[idx];
+        delete state.shoppingChecked[item];
+        state.shoppingList.splice(idx, 1);
+        await db.collection('snacks').doc('shoppingList').set(
+          { shoppingList: state.shoppingList, shoppingChecked: state.shoppingChecked }, { merge: true });
+        renderShopping();
+      };
+    });
   }
 
   function renderProgress() {
@@ -948,50 +922,6 @@
       </div>`).join('');
   }
 
-  function renderLog() {
-    const weighins = [...state.measurements].reverse().slice(0, 10);
-    document.getElementById('recentWeighins').innerHTML = weighins.map(m =>
-      `<div class="log-entry"><span>${m.date}</span><strong>${m.weight} kg</strong></div>`
-    ).join('') || '<div class="text-muted">No entries yet.</div>';
-
-    let habitHtml = '';
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0,10);
-      const log = state.dailyLog[key];
-      if (log && log.habits) {
-        habitHtml += `<div class="log-entry"><span>${key}</span>` +
-          `<span>${Object.values(log.habits).filter(Boolean).length}/5 habits</span></div>`;
-      }
-    }
-    document.getElementById('habitHistory').innerHTML = habitHtml ||
-      '<div class="text-muted">No habit history.</div>';
-
-    const shopEl = document.getElementById('shoppingListContainer');
-    shopEl.innerHTML = state.shoppingList.length
-      ? state.shoppingList.map((item, i) => `
-        <div class="shopping-item">
-          <label class="flex-row" style="gap:10px;cursor:pointer;">
-            <input type="checkbox" data-idx="${i}"><span>${item}</span>
-          </label>
-          <button class="btn ghost small" data-remove="${i}" style="padding:4px 10px;">✕</button>
-        </div>`).join('')
-      : '<div class="text-muted">Shopping list empty.</div>';
-    shopEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.onchange = () => {
-        cb.closest('.shopping-item').style.opacity = cb.checked ? '0.4' : '1';
-      };
-    });
-    shopEl.querySelectorAll('[data-remove]').forEach(btn => {
-      btn.onclick = async () => {
-        state.shoppingList.splice(parseInt(btn.dataset.remove), 1);
-        await db.collection('snacks').doc('shoppingList').set(
-          { shoppingList: state.shoppingList }, { merge: true });
-        renderLog();
-      };
-    });
-  }
-
   function renderPlanSlider() {
     const slider = document.getElementById('planCalorieSlider');
     slider.value = state.planCalorieTarget;
@@ -1016,7 +946,90 @@
 
   function renderAll() {
     renderToday(); renderMealPlan(); renderCookbook();
-    renderChat(); renderProgress(); renderLog(); renderPlanSlider();
+    renderShopping(); renderProgress(); renderPlanSlider();
+  }
+
+  // ============ SNAP ============
+  function renderSnapResult(data) {
+    const container = document.getElementById('snapResultContainer');
+    const variants = data.variants || [];
+    container.innerHTML = `
+      <div class="card">
+        <h3>${data.dish || 'Identified dish'}</h3>
+        <div class="variant-slider">
+          <span class="text-tiny">400</span>
+          <input type="range" id="variantSlider" min="0" max="${variants.length-1}" value="0" step="1">
+          <span class="text-tiny">800</span>
+        </div>
+        <div class="taste-scale">
+          <span id="tasteLow">🥗 More sacrifice · faster loss</span>
+          <span id="tasteHigh">🍔 More satisfying</span>
+        </div>
+        <div id="variantDisplay"></div>
+        <div class="honesty-note">
+          ⚖️ Lower-calorie versions use swaps like cauliflower rice, Greek yoghurt, and no oil.
+          They will be less rich and tasty — this is an honest trade-off, not "fat-burning magic".
+          Only a calorie deficit burns fat.
+        </div>
+        <div class="flex-row mt-2">
+          <button class="btn secondary small" id="saveRecipeBtn">💾 Save to Cookbook</button>
+          <button class="btn secondary small" id="addShoppingSnapBtn">🛒 Add to Shopping List</button>
+          <button class="btn ghost small" id="clearSnapBtn">✕ Clear</button>
+        </div>
+      </div>`;
+    const slider = document.getElementById('variantSlider');
+    const display = document.getElementById('variantDisplay');
+    function updateVariant(idx) {
+      const v = variants[idx];
+      if (!v) return;
+      display.innerHTML = `
+        <div class="stat-grid mt-2">
+          <div class="stat"><div class="label">Calories</div><div class="value">${v.calories}</div></div>
+          <div class="stat"><div class="label">Protein</div><div class="value">${v.protein}g</div></div>
+        </div>
+        <div class="flex-between text-small">
+          <span>Carbs: ${v.carbs}g</span><span>Fat: ${v.fat}g</span>
+        </div>
+        <h4 class="mt-2">${v.name}</h4>
+        <p class="text-small mt-2"><strong>Ingredients:</strong> ${(v.ingredients||[]).join(', ')}</p>
+        <p class="text-small mt-2"><strong>Instructions:</strong> ${v.instructions||''}</p>
+        ${v.taste_note ? `<p class="text-small mt-2 text-muted"><em>Taste note: ${v.taste_note}</em></p>` : ''}`;
+      document.getElementById('tasteLow').style.color = idx <= 1 ? 'var(--accent)' : 'var(--text-muted)';
+      document.getElementById('tasteLow').style.fontWeight = idx <= 1 ? '700' : '400';
+      document.getElementById('tasteHigh').style.color = idx >= 3 ? 'var(--accent)' : 'var(--text-muted)';
+      document.getElementById('tasteHigh').style.fontWeight = idx >= 3 ? '700' : '400';
+    }
+    slider.oninput = (e) => updateVariant(parseInt(e.target.value));
+    updateVariant(0);
+
+    document.getElementById('saveRecipeBtn').onclick = async () => {
+      const v = variants[parseInt(slider.value)];
+      await db.collection('recipes').add({
+        name: v.name, calories: v.calories, protein: v.protein,
+        carbs: v.carbs, fat: v.fat,
+        ingredients: v.ingredients || [], instructions: v.instructions || '',
+        favorite: false, tags: ['ai-generated'], date: todayKey()
+      });
+      flash('✅ Saved to Cookbook!');
+      await loadFromFirestore(); renderCookbook();
+    };
+
+    document.getElementById('addShoppingSnapBtn').onclick = async () => {
+      const v = variants[parseInt(slider.value)];
+      state.shoppingList = [...new Set([...state.shoppingList, ...(v.ingredients||[])])];
+      await db.collection('snacks').doc('shoppingList').set(
+        { shoppingList: state.shoppingList, shoppingChecked: state.shoppingChecked }, { merge: true });
+      flash('🛒 Added to shopping list!'); renderShopping();
+    };
+
+    document.getElementById('clearSnapBtn').onclick = () => {
+      state.snapImageData = null;
+      state.snapVariants = null;
+      document.getElementById('snapPreview').classList.add('hidden');
+      document.getElementById('snapPreview').src = '';
+      document.getElementById('analyzeDishBtn').classList.add('hidden');
+      container.innerHTML = '';
+    };
   }
 
   // ============ INIT ============
@@ -1036,10 +1049,8 @@
     document.getElementById('saveWeightBtn').onclick = async () => {
       const val = parseFloat(document.getElementById('morningWeight').value);
       if (isNaN(val) || val < 30 || val > 200) return flash('⚠️ Enter valid weight (30-200 kg)');
-      try {
-        await saveWeight(val);
-        flash('✅ Weight saved!'); renderAll();
-      } catch (e) { flash('❌ Save failed'); console.error(e); }
+      try { await saveWeight(val); flash('✅ Weight saved!'); renderAll(); }
+      catch (e) { flash('❌ Save failed'); console.error(e); }
     };
 
     document.getElementById('calcBodyFatBtn').onclick = async () => {
@@ -1080,9 +1091,7 @@
         const days = state.mealPlanDays;
         const diet = document.getElementById('dietPreference').value;
         const budget = document.getElementById('budgetLevel').value;
-
-        const systemPrompt =
-          'You are a nutrition assistant. Respond ONLY with valid JSON, no markdown fences, no prose.';
+        const systemPrompt = 'You are a nutrition assistant. Respond ONLY with valid JSON, no markdown fences, no prose.';
         const userPrompt =
           `Generate a ${days}-day meal plan for a 27yo male, 175cm, ${weight}kg, works a physical job on his feet. ` +
           `Target ${target} kcal/day, protein ${protein}g/day. Diet style: ${diet}. Budget: ${budget}. ` +
@@ -1091,7 +1100,6 @@
             : 'This is a moderate deficit — keep meals satisfying.') +
           ` Return JSON: {"meals":[{"id":"m1","name":"...","time":"07:30","calories":320,"protein":28,"carbs":35,"fat":8,"description":"..."}, ...]}. ` +
           `For multi-day plans use ids like "d1m1","d1m2","d2m1".`;
-
         const raw = await callDeepSeek([
           { role:'system', content: systemPrompt },
           { role:'user', content: userPrompt }
@@ -1108,9 +1116,7 @@
       }
     };
 
-    document.getElementById('regeneratePlanBtn').onclick = () => {
-      document.getElementById('generatePlanBtn').click();
-    };
+    document.getElementById('regeneratePlanBtn').onclick = () => document.getElementById('generatePlanBtn').click();
 
     document.querySelectorAll('#mealPlanDuration button').forEach(btn => {
       btn.onclick = () => {
@@ -1120,9 +1126,7 @@
       };
     });
 
-    document.getElementById('snapBtn').onclick = () => {
-      document.getElementById('snapInput').click();
-    };
+    document.getElementById('snapBtn').onclick = () => document.getElementById('snapInput').click();
 
     document.getElementById('snapInput').onchange = (e) => {
       const file = e.target.files[0];
@@ -1227,14 +1231,6 @@
     document.getElementById('recipeSearch').oninput = renderCookbook;
     document.getElementById('recipeFilter').onchange = renderCookbook;
 
-    document.getElementById('chatSendBtn').onclick = () => sendChat(document.getElementById('chatInput').value);
-    document.getElementById('chatInput').onkeydown = (e) => {
-      if (e.key === 'Enter') sendChat(e.target.value);
-    };
-    document.querySelectorAll('.quick-prompt').forEach(btn => {
-      btn.onclick = () => sendChat(btn.dataset.prompt);
-    });
-
     document.querySelectorAll('#chartRange button').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('#chartRange button').forEach(b => b.classList.remove('active'));
@@ -1250,150 +1246,36 @@
       state.shoppingList.push(val);
       document.getElementById('newShoppingItem').value = '';
       await db.collection('snacks').doc('shoppingList').set(
-        { shoppingList: state.shoppingList }, { merge: true });
-      renderLog();
+        { shoppingList: state.shoppingList, shoppingChecked: state.shoppingChecked }, { merge: true });
+      renderShopping();
     };
 
-    document.getElementById('exportDataBtn').onclick = () => {
-      const data = {
-        exported: new Date().toISOString(),
-        measurements: state.measurements,
-        dailyLog: state.dailyLog,
-        mealPlan: state.mealPlan,
-        recipes: state.recipes,
-        shoppingList: state.shoppingList,
-        chatHistory: state.chatHistory
-      };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `cuttrack-backup-${todayKey()}.json`;
-      a.click(); URL.revokeObjectURL(url);
-      flash('📤 Backup downloaded!');
-    };
-  }
-
-  function renderSnapResult(data) {
-    const container = document.getElementById('snapResultContainer');
-    const variants = data.variants || [];
-    container.innerHTML = `
-      <div class="card">
-        <h3>${data.dish || 'Identified dish'}</h3>
-        <div class="variant-slider">
-          <span class="text-tiny">400</span>
-          <input type="range" id="variantSlider" min="0" max="${variants.length-1}" value="0" step="1">
-          <span class="text-tiny">800</span>
-        </div>
-        <div class="taste-scale">
-          <span id="tasteLow">🥗 More sacrifice · faster loss</span>
-          <span id="tasteHigh">🍔 More satisfying</span>
-        </div>
-        <div id="variantDisplay"></div>
-        <div class="honesty-note">
-          ⚖️ Lower-calorie versions use swaps like cauliflower rice, Greek yoghurt, and no oil.
-          They will be less rich and tasty — this is an honest trade-off, not "fat-burning magic".
-          Only a calorie deficit burns fat.
-        </div>
-        <div class="flex-row mt-2">
-          <button class="btn secondary small" id="saveRecipeBtn">💾 Save to Cookbook</button>
-          <button class="btn secondary small" id="addShoppingSnapBtn">🛒 Add to Shopping List</button>
-        </div>
-      </div>`;
-    const slider = document.getElementById('variantSlider');
-    const display = document.getElementById('variantDisplay');
-    function updateVariant(idx) {
-      const v = variants[idx];
-      if (!v) return;
-      display.innerHTML = `
-        <div class="stat-grid mt-2">
-          <div class="stat"><div class="label">Calories</div><div class="value">${v.calories}</div></div>
-          <div class="stat"><div class="label">Protein</div><div class="value">${v.protein}g</div></div>
-        </div>
-        <div class="flex-between text-small">
-          <span>Carbs: ${v.carbs}g</span><span>Fat: ${v.fat}g</span>
-        </div>
-        <h4 class="mt-2">${v.name}</h4>
-        <p class="text-small mt-2"><strong>Ingredients:</strong> ${(v.ingredients||[]).join(', ')}</p>
-        <p class="text-small mt-2"><strong>Instructions:</strong> ${v.instructions||''}</p>
-        ${v.taste_note ? `<p class="text-small mt-2 text-muted"><em>Taste note: ${v.taste_note}</em></p>` : ''}`;
-      document.getElementById('tasteLow').style.color = idx <= 1 ? 'var(--accent)' : 'var(--text-muted)';
-      document.getElementById('tasteLow').style.fontWeight = idx <= 1 ? '700' : '400';
-      document.getElementById('tasteHigh').style.color = idx >= 3 ? 'var(--accent)' : 'var(--text-muted)';
-      document.getElementById('tasteHigh').style.fontWeight = idx >= 3 ? '700' : '400';
-    }
-    slider.oninput = (e) => updateVariant(parseInt(e.target.value));
-    updateVariant(0);
-
-    document.getElementById('saveRecipeBtn').onclick = async () => {
-      const v = variants[parseInt(slider.value)];
-      await db.collection('recipes').add({
-        name: v.name, calories: v.calories, protein: v.protein,
-        carbs: v.carbs, fat: v.fat,
-        ingredients: v.ingredients || [], instructions: v.instructions || '',
-        favorite: false, tags: ['ai-generated'], date: todayKey()
-      });
-      flash('✅ Saved to Cookbook!');
+    document.getElementById('newShoppingItem').onkeydown = (e) => {
+      if (e.key === 'Enter') document.getElementById('addShoppingBtn').click();
     };
 
-    document.getElementById('addShoppingSnapBtn').onclick = async () => {
-      const v = variants[parseInt(slider.value)];
-      state.shoppingList = [...new Set([...state.shoppingList, ...(v.ingredients||[])])];
+    document.getElementById('clearCheckedBtn').onclick = async () => {
+      state.shoppingList = state.shoppingList.filter(item => !state.shoppingChecked[item]);
+      state.shoppingChecked = {};
       await db.collection('snacks').doc('shoppingList').set(
-        { shoppingList: state.shoppingList }, { merge: true });
-      flash('🛒 Added to shopping list!'); renderLog();
+        { shoppingList: state.shoppingList, shoppingChecked: {} }, { merge: true });
+      renderShopping(); flash('Cleared checked items');
     };
-  }
 
-  async function sendChat(text) {
-    if (!text.trim()) return;
-    state.chatHistory.push({ role:'user', content: text });
-    renderChat();
-    document.getElementById('chatInput').value = '';
-
-    const recent7 = state.measurements.slice(-7);
-    const avg7 = recent7.length
-      ? (recent7.reduce((s,m)=>s+m.weight,0)/recent7.length).toFixed(1) : 'unknown';
-    const { target } = getSafeCalorieTarget(state.todayWeight);
-    const habitCount = Object.values(state.habits).filter(Boolean).length;
-    const mealsEaten = (state.mealPlan?.meals || []).filter(m => state.eatenMeals[m.id]).length;
-    const totalMeals = (state.mealPlan?.meals || []).length;
-    const trend7 = recent7.length >= 2
-      ? (recent7[recent7.length-1].weight - recent7[0].weight).toFixed(2)
-      : 'n/a';
-
-    const context =
-      `USER CONTEXT (live data):\n` +
-      `- Current weight: ${state.todayWeight} kg\n` +
-      `- 7-day avg weight: ${avg7} kg\n` +
-      `- Weight change over last 7 logs: ${trend7} kg\n` +
-      `- Auto-recommended target: ${target} kcal\n` +
-      `- User-selected plan target: ${state.planCalorieTarget} kcal\n` +
-      `- Protein target: ${Math.round(state.todayWeight * PROTEIN_PER_KG)} g\n` +
-      `- Habits completed today: ${habitCount}/5\n` +
-      `- Water today: ${state.waterGlasses}/8 glasses\n` +
-      `- Meals eaten today: ${mealsEaten}/${totalMeals}\n` +
-      `- Mood today: ${state.mood || 'not logged'}\n` +
-      `- Current streak: ${calcStreak()} days\n` +
-      `- Goal weight: ${USER.goalWeight} kg\n` +
-      `- Height: ${USER.heightCm} cm, Age: ${new Date().getFullYear() - USER.birthDate.getFullYear()}\n` +
-      `- Activity: on feet all day, physical job, no structured gym training.\n\n` +
-      `Be encouraging, honest, and specific to their data. Never encourage crash dieting. ` +
-      `Hard floor is ${CALORIE_FLOOR} kcal/day. Safe rate is ~0.5-0.7 kg/week. ` +
-      `If they're below the floor or losing > 1 kg/week, push back honestly. ` +
-      `Keep replies concise (2-4 short paragraphs max).`;
-
-    try {
-      const raw = await callDeepSeek([
-        { role:'system', content: context },
-        ...state.chatHistory.slice(-10).map(m => ({ role: m.role, content: m.content }))
-      ], { temperature: 0.7, maxTokens: 800 });
-      state.chatHistory.push({ role:'ai', content: raw });
-      renderChat();
-    } catch (e) {
-      console.error(e);
-      state.chatHistory.push({ role:'ai', content:'❌ Sorry, I had trouble reaching the AI. Check your proxy URL and try again.' });
-      renderChat();
-    }
+    document.querySelectorAll('#quickAddRow button').forEach(btn => {
+      btn.onclick = async () => {
+        const item = btn.dataset.quick;
+        if (!state.shoppingList.includes(item)) {
+          state.shoppingList.push(item);
+          await db.collection('snacks').doc('shoppingList').set(
+            { shoppingList: state.shoppingList, shoppingChecked: state.shoppingChecked }, { merge: true });
+          flash('Added: ' + item);
+          renderShopping();
+        } else {
+          flash('Already on the list');
+        }
+      };
+    });
   }
 
   let appBooted = false;
