@@ -4,6 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
 <title>CutTrack · Body Fat & Fat Loss</title>
+
+<!-- VERSION BOOTSTRAP — runs before everything else -->
+<script>
+  (function() {
+    const CURRENT = "3"; // <-- bump this every deploy
+    function checkVersion() {
+      fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.version && String(data.version) !== CURRENT) {
+            const url = new URL(location.href);
+            if (url.searchParams.get('v') !== String(data.version)) {
+              url.searchParams.set('v', data.version);
+              location.replace(url.toString());
+            }
+          }
+        })
+        .catch(() => {});
+    }
+    checkVersion();
+    let lastCheck = Date.now();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        if (Date.now() - lastCheck < 300000) return;
+        lastCheck = Date.now();
+        checkVersion();
+      }
+    });
+    window.__CUTTRACK_VERSION__ = CURRENT;
+  })();
+</script>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -63,19 +95,24 @@
   .progress-bar-bg { width:100%; height:10px; background:#2a2e3a; border-radius:20px; overflow:hidden; margin:8px 0; }
   .progress-bar-fill { height:100%; background:var(--accent); border-radius:20px; width:0%; transition:width 0.3s ease; }
   .meal-card { background:var(--bg-elev); border-radius:16px; padding:14px; margin-bottom:10px;
-    border:1px solid #2a2e3a; cursor:pointer; transition:all 0.15s; }
+    border:1px solid #2a2e3a; cursor:pointer; transition:all 0.15s; display:flex; gap:12px; align-items:flex-start; }
   .meal-card.eaten { border-color:var(--success); background:#1a2a1f; opacity:0.9; }
-  .meal-title { font-weight:700; display:flex; justify-content:space-between; font-size:1rem; }
+  .meal-card-img { width:56px; height:56px; border-radius:12px; object-fit:cover; flex-shrink:0; background:#2a2e3a; }
+  .meal-card-body { flex:1; min-width:0; }
+  .meal-title { font-weight:700; display:flex; justify-content:space-between; font-size:1rem; gap:8px; }
   .meal-macros { display:flex; gap:12px; font-size:0.8rem; color:var(--text-muted); margin-top:4px; flex-wrap:wrap; }
   .meal-desc { font-size:0.9rem; color:#cbd5e1; margin:6px 0 0; }
-  .variant-slider { display:flex; align-items:center; gap:12px; margin:12px 0; }
+  .variant-slider { display:flex; align-items:center; gap:12px; margin:12px 0 6px; }
   .variant-slider input[type="range"] { flex:1; padding:0; height:8px; background:#2a2e3a;
     -webkit-appearance:none; border-radius:10px; }
-  .variant-slider input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:26px;
-    height:26px; background:var(--accent); border-radius:50%; border:2px solid #fff;
+  .variant-slider input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:28px;
+    height:28px; background:var(--accent); border-radius:50%; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,0.5); cursor:pointer; }
   .slider-labels { display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted);
-    margin-top:-6px; margin-bottom:8px; }
+    margin-top:2px; margin-bottom:8px; }
+  .slider-ticks { display:flex; justify-content:space-between; font-size:0.6rem; color:var(--text-muted);
+    margin-top:-2px; margin-bottom:6px; }
+  .slider-ticks span.true { color:var(--accent); font-weight:700; }
   .snap-preview { max-width:100%; border-radius:16px; margin:10px 0; border:1px solid #2a2e3a;
     max-height:220px; object-fit:cover; width:100%; }
   .tab-bar { position:fixed; bottom:0; left:0; right:0; background:#0f1117; border-top:1px solid #1f232e;
@@ -107,14 +144,18 @@
   canvas { max-width:100%; }
   .log-entry { padding:10px 0; border-bottom:1px solid #222630; display:flex; justify-content:space-between; align-items:center; }
   .recipe-card { background:var(--bg-elev); border-radius:16px; padding:14px; margin-bottom:10px;
-    border:1px solid #2a2e3a; cursor:pointer; transition:all 0.15s; }
+    border:1px solid #2a2e3a; cursor:pointer; transition:all 0.15s; display:flex; gap:12px; align-items:center; }
   .recipe-card:active { transform:scale(0.98); }
+  .recipe-thumb { width:56px; height:56px; border-radius:12px; object-fit:cover; flex-shrink:0;
+    background:#2a2e3a; display:flex; align-items:center; justify-content:center; font-size:1.6rem; color:var(--text-muted); }
+  .recipe-card-body { flex:1; min-width:0; }
   .recipe-tag { display:inline-block; background:#2a2e3a; border-radius:20px; padding:3px 10px;
     font-size:0.7rem; color:var(--text-muted); margin-right:6px; margin-top:6px; }
   .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1500; display:flex;
     align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
   .modal { background:var(--bg-card); border-radius:24px; padding:24px 20px; max-width:500px; width:100%;
     max-height:85vh; overflow-y:auto; border:1px solid var(--border); }
+  .modal-recipe-img { width:100%; max-height:240px; object-fit:cover; border-radius:16px; margin-bottom:12px; }
   .water-tracker { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
   .water-glass { width:40px; height:40px; border-radius:10px; border:2px solid #3b82f6; display:flex;
     align-items:center; justify-content:center; font-size:1.1rem; cursor:pointer; transition:all 0.15s; }
@@ -146,6 +187,8 @@
   .google-btn svg { width:20px; height:20px; }
   .snap-panel { background:#1a1520; border:1px dashed #4a3a2a; border-radius:16px; padding:16px;
     margin-bottom:12px; }
+  .version-badge { font-size:0.65rem; color:var(--text-muted); padding:2px 8px; border-radius:20px;
+    border:1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -177,7 +220,10 @@
   <div id="tab-today" class="tab-panel">
     <div class="flex-between" style="margin-bottom:12px;">
       <h1 style="margin:0;">Cut<span>Track</span></h1>
-      <button class="btn ghost small" id="signOutBtn" title="Sign out">👤</button>
+      <div class="flex-row" style="gap:8px;">
+        <span class="version-badge" id="versionBadge">v?</span>
+        <button class="btn ghost small" id="signOutBtn" title="Sign out">👤</button>
+      </div>
     </div>
     <div class="card">
       <div class="flex-between"><h3>☀️ Morning weight</h3><span class="badge" id="todayDateLabel">—</span></div>
@@ -295,17 +341,16 @@
     </div>
   </div>
 
-  <!-- COOKBOOK (with Snap built in) -->
+  <!-- COOKBOOK (with Snap) -->
   <div id="tab-cookbook" class="tab-panel hidden">
     <h2>📖 Cookbook</h2>
 
-    <!-- Snap panel -->
     <div class="snap-panel">
       <div class="flex-between mb-2">
         <h3 style="margin:0;">📸 Snap a dish</h3>
         <span class="text-tiny text-muted">AI → recipe</span>
       </div>
-      <input type="file" id="snapInput" accept="image/*"style="display:none;">
+      <input type="file" id="snapInput" accept="image/*" capture="environment" style="display:none;">
       <button class="btn block" id="snapBtn">📷 Take / Upload photo</button>
       <img id="snapPreview" class="snap-preview hidden" alt="preview">
       <div id="snapAnalyzing" class="text-center mt-2 hidden"><span class="spinner"></span> <span class="text-muted text-small">Analyzing with AI...</span></div>
@@ -314,7 +359,6 @@
 
     <div id="snapResultContainer"></div>
 
-    <!-- Recipe library -->
     <div class="card">
       <div class="flex-row">
         <input type="text" id="recipeSearch" placeholder="🔍 Search recipes..." style="flex:3;">
@@ -414,6 +458,18 @@
   const CALORIE_FLOOR = 1500;
   const PROTEIN_PER_KG = 2.2;
 
+  // Fidelity scale — 7 stops, from −40% to +15%. Index 5 is "True to photo" (0%).
+  const FIDELITY_STOPS = [
+    { pct: -40, label: '🥗 Extreme cut' },
+    { pct: -30, label: '🥗 Aggressive' },
+    { pct: -25, label: '⚖️ Cut' },
+    { pct: -15, label: '⚖️ Light' },
+    { pct: -5,  label: '✅ Balanced' },
+    { pct: 0,   label: '🎯 True to photo' },
+    { pct: 15,  label: '🍔 Full flavour' }
+  ];
+  const TRUE_INDEX = 5;
+
   // ============ STATE ============
   let state = {
     currentTab: 'today',
@@ -426,6 +482,7 @@
     eatenMeals: {},
     snapImageData: null,
     snapVariants: null,
+    snapBaseCalories: null,
     shoppingList: [],
     shoppingChecked: {},
     measurements: [],
@@ -626,6 +683,7 @@
     document.getElementById('todayDateLabel').textContent =
       new Date().toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
     document.getElementById('morningWeight').value = state.todayWeight || 80.0;
+    document.getElementById('versionBadge').textContent = 'v' + (window.__CUTTRACK_VERSION__ || '?');
 
     const { target, warning, tdee } = getSafeCalorieTarget(state.todayWeight);
     document.getElementById('targetCalories').textContent = target;
@@ -711,12 +769,15 @@
     const eaten = state.eatenMeals || {};
     container.innerHTML = `<div class="card">${meals.map(m => `
       <div class="meal-card ${eaten[m.id] ? 'eaten' : ''}" data-meal-id="${m.id}">
-        <div class="meal-title"><span>${m.name}</span><span>${m.calories} kcal</span></div>
-        <div class="meal-macros">
-          <span>⏰ ${m.time||''}</span><span>🥩 ${m.protein}g</span>
-          <span>🍚 ${m.carbs}g</span><span>🥑 ${m.fat}g</span>
+        ${m.photo ? `<img class="meal-card-img" src="${m.photo}" alt="">` : ''}
+        <div class="meal-card-body">
+          <div class="meal-title"><span>${m.name}</span><span>${m.calories} kcal</span></div>
+          <div class="meal-macros">
+            <span>⏰ ${m.time||''}</span><span>🥩 ${m.protein}g</span>
+            <span>🍚 ${m.carbs}g</span><span>🥑 ${m.fat}g</span>
+          </div>
+          <div class="meal-desc">${m.description||''}</div>
         </div>
-        <div class="meal-desc">${m.description||''}</div>
       </div>`).join('')}</div>`;
     container.querySelectorAll('.meal-card').forEach(el => {
       el.onclick = () => {
@@ -747,14 +808,19 @@
     }
     el.innerHTML = filtered.map(r => `
       <div class="card recipe-card" data-recipe-id="${r.id}">
-        <div class="flex-between">
-          <h3>${r.favorite ? '⭐ ' : ''}${r.name}</h3>
-          <span class="badge">${r.calories} kcal</span>
+        ${r.photo
+          ? `<img class="recipe-thumb" src="${r.photo}" alt="">`
+          : `<div class="recipe-thumb">🍽️</div>`}
+        <div class="recipe-card-body">
+          <div class="flex-between">
+            <h3 style="margin:0;">${r.favorite ? '⭐ ' : ''}${r.name}</h3>
+            <span class="badge">${r.calories} kcal</span>
+          </div>
+          <div class="meal-macros">
+            <span>🥩 ${r.protein}g</span><span>🍚 ${r.carbs}g</span><span>🥑 ${r.fat}g</span>
+          </div>
+          <div>${(r.tags||[]).slice(0,3).map(t => `<span class="recipe-tag">${t}</span>`).join('')}</div>
         </div>
-        <div class="meal-macros">
-          <span>🥩 ${r.protein}g</span><span>🍚 ${r.carbs}g</span><span>🥑 ${r.fat}g</span>
-        </div>
-        <div class="mt-2">${(r.tags||[]).map(t => `<span class="recipe-tag">${t}</span>`).join('')}</div>
       </div>`).join('');
     el.querySelectorAll('.recipe-card').forEach(card => {
       card.onclick = () => showRecipeModal(card.dataset.recipeId);
@@ -772,6 +838,7 @@
           <h3>${r.name}</h3>
           <button class="btn ghost small" id="closeModal">✕</button>
         </div>
+        ${r.photo ? `<img class="modal-recipe-img" src="${r.photo}" alt="">` : ''}
         <div class="stat-grid-3">
           <div class="stat"><div class="label">Cal</div><div class="value">${r.calories}</div></div>
           <div class="stat"><div class="label">Protein</div><div class="value">${r.protein}g</div></div>
@@ -809,7 +876,8 @@
         id: 'recipe-' + id, name: r.name,
         time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
         calories: r.calories, protein: r.protein, carbs: r.carbs, fat: r.fat,
-        description: (r.ingredients||[]).slice(0,4).join(', ')
+        description: (r.ingredients||[]).slice(0,4).join(', '),
+        photo: r.photo || null
       }]};
       await db.collection('mealPlan').doc('current').set(newPlan);
       state.mealPlan = newPlan;
@@ -953,21 +1021,35 @@
   function renderSnapResult(data) {
     const container = document.getElementById('snapResultContainer');
     const variants = data.variants || [];
+    const base = data.base_calories || (variants[TRUE_INDEX]?.calories) || 0;
+
+    // Build the tick marks for the slider (show only key ones to avoid clutter)
+    const ticksHtml = FIDELITY_STOPS.map((s, i) =>
+      `<span class="${i === TRUE_INDEX ? 'true' : ''}">${s.pct > 0 ? '+' : ''}${s.pct}%</span>`
+    ).join('');
+
     container.innerHTML = `
       <div class="card">
-        <h3>${data.dish || 'Identified dish'}</h3>
-        <div class="variant-slider">
-          <span class="text-tiny">400</span>
-          <input type="range" id="variantSlider" min="0" max="${variants.length-1}" value="0" step="1">
-          <span class="text-tiny">800</span>
+        <div class="flex-between mb-2">
+          <h3 style="margin:0;">${data.dish || 'Identified dish'}</h3>
+          <span class="badge">~${base} kcal in photo</span>
         </div>
-        <div class="taste-scale">
-          <span id="tasteLow">🥗 More sacrifice · faster loss</span>
-          <span id="tasteHigh">🍔 More satisfying</span>
+        <div class="text-tiny text-muted">AI estimate of what's actually on the plate. Slide to see how far you want to push the deficit.</div>
+
+        <div class="variant-slider mt-3">
+          <input type="range" id="variantSlider" min="0" max="${FIDELITY_STOPS.length-1}" value="${TRUE_INDEX}" step="1">
         </div>
+        <div class="slider-ticks">${ticksHtml}</div>
+        <div class="slider-labels">
+          <span>🥗 Extreme cut</span>
+          <span id="snapLabel" style="color:var(--accent);font-weight:700;">${FIDELITY_STOPS[TRUE_INDEX].label}</span>
+          <span>🍔 Full flavour</span>
+        </div>
+
         <div id="variantDisplay"></div>
+
         <div class="honesty-note">
-          ⚖️ Lower-calorie versions use swaps like cauliflower rice, Greek yoghurt, and no oil.
+          ⚖️ Below the "True to photo" stop, recipes use swaps like cauliflower rice, Greek yoghurt, and no oil.
           They will be less rich and tasty — this is an honest trade-off, not "fat-burning magic".
           Only a calorie deficit burns fat.
         </div>
@@ -977,11 +1059,16 @@
           <button class="btn ghost small" id="clearSnapBtn">✕ Clear</button>
         </div>
       </div>`;
+
     const slider = document.getElementById('variantSlider');
     const display = document.getElementById('variantDisplay');
+    const label = document.getElementById('snapLabel');
+
     function updateVariant(idx) {
       const v = variants[idx];
       if (!v) return;
+      const stop = FIDELITY_STOPS[idx];
+      label.textContent = stop.label;
       display.innerHTML = `
         <div class="stat-grid mt-2">
           <div class="stat"><div class="label">Calories</div><div class="value">${v.calories}</div></div>
@@ -993,29 +1080,29 @@
         <h4 class="mt-2">${v.name}</h4>
         <p class="text-small mt-2"><strong>Ingredients:</strong> ${(v.ingredients||[]).join(', ')}</p>
         <p class="text-small mt-2"><strong>Instructions:</strong> ${v.instructions||''}</p>
-        ${v.taste_note ? `<p class="text-small mt-2 text-muted"><em>Taste note: ${v.taste_note}</em></p>` : ''}`;
-      document.getElementById('tasteLow').style.color = idx <= 1 ? 'var(--accent)' : 'var(--text-muted)';
-      document.getElementById('tasteLow').style.fontWeight = idx <= 1 ? '700' : '400';
-      document.getElementById('tasteHigh').style.color = idx >= 3 ? 'var(--accent)' : 'var(--text-muted)';
-      document.getElementById('tasteHigh').style.fontWeight = idx >= 3 ? '700' : '400';
+        ${v.taste_note ? `<p class="text-small mt-2 text-muted"><em>${v.taste_note}</em></p>` : ''}`;
     }
     slider.oninput = (e) => updateVariant(parseInt(e.target.value));
-    updateVariant(0);
+    updateVariant(TRUE_INDEX);
 
     document.getElementById('saveRecipeBtn').onclick = async () => {
-      const v = variants[parseInt(slider.value)];
+      const idx = parseInt(slider.value);
+      const v = variants[idx];
       await db.collection('recipes').add({
         name: v.name, calories: v.calories, protein: v.protein,
         carbs: v.carbs, fat: v.fat,
         ingredients: v.ingredients || [], instructions: v.instructions || '',
-        favorite: false, tags: ['ai-generated'], date: todayKey()
+        photo: state.snapImageData || null,
+        favorite: false, tags: ['ai-generated', FIDELITY_STOPS[idx].label.replace(/[^\w\s]/g,'').trim()],
+        date: todayKey()
       });
       flash('✅ Saved to Cookbook!');
       await loadFromFirestore(); renderCookbook();
     };
 
     document.getElementById('addShoppingSnapBtn').onclick = async () => {
-      const v = variants[parseInt(slider.value)];
+      const idx = parseInt(slider.value);
+      const v = variants[idx];
       state.shoppingList = [...new Set([...state.shoppingList, ...(v.ingredients||[])])];
       await db.collection('snacks').doc('shoppingList').set(
         { shoppingList: state.shoppingList, shoppingChecked: state.shoppingChecked }, { merge: true });
@@ -1025,6 +1112,7 @@
     document.getElementById('clearSnapBtn').onclick = () => {
       state.snapImageData = null;
       state.snapVariants = null;
+      state.snapBaseCalories = null;
       document.getElementById('snapPreview').classList.add('hidden');
       document.getElementById('snapPreview').src = '';
       document.getElementById('analyzeDishBtn').classList.add('hidden');
@@ -1159,24 +1247,36 @@
       const spinner = document.getElementById('snapAnalyzing');
       btn.disabled = true; btn.classList.add('hidden'); spinner.classList.remove('hidden');
       try {
+        // Build the fidelity scale instruction text
+        const scaleDesc = FIDELITY_STOPS.map((s, i) =>
+          `${i}: ${s.pct === 0 ? 'True to photo (0%)' : (s.pct > 0 ? '+' : '') + s.pct + '%'} — ${s.label.replace(/[^\w\s]/g,'').trim()}`
+        ).join('\n');
+
         const messages = [
           { role:'system', content:'You are a chef and nutritionist. Identify dishes from photos and respond ONLY with valid JSON, no markdown fences, no prose.' },
           { role:'user', content: [
             { type:'text', text:
-              'Identify this dish. Return JSON exactly like: ' +
-              '{"dish":"Name","variants":[' +
-              '{"calories":400,"name":"...","ingredients":["..."],"instructions":"...","protein":30,"carbs":40,"fat":12,"taste_note":"..."},' +
-              '...one variant for each of 400, 500, 600, 700, 800 calories]}. ' +
-              'For the 400 and 500 variants, use honest swaps: cauliflower rice, Greek yogurt, lean mince, no oil, less cheese. ' +
-              'In the taste_note field, describe honestly how the taste/richness is reduced. ' +
+              'Identify this dish. First estimate the real calorie count of what is on the plate (base_calories). ' +
+              'Then produce 7 recipe variants at these percentage offsets of that base:\n' + scaleDesc + '\n\n' +
+              'Return JSON exactly like:\n' +
+              '{"dish":"Name","base_calories":650,"variants":[' +
+              '{"calories":390,"name":"...","ingredients":["..."],"instructions":"...","protein":35,"carbs":30,"fat":12,"taste_note":"..."},' +
+              ' ... 7 entries total, one per stop, in the same order].\n' +
+              'The stop 5 variant ("True to photo") should be the closest, most faithful recipe to the actual photo. ' +
+              'Stops 0-4 use honest swaps: cauliflower rice, Greek yoghurt, no oil, less cheese, leaner mince. ' +
+              'Stop 6 uses more oil, more cheese, larger portions. ' +
+              'In taste_note describe honestly how taste is affected at that stop. ' +
               'Do NOT claim any ingredient "burns fat". Only a calorie deficit burns fat.' },
             { type:'image_url', image_url:{ url: state.snapImageData } }
           ]}
         ];
-        const raw = await callDeepSeek(messages, { temperature: 0.4, maxTokens: 3500 });
+        const raw = await callDeepSeek(messages, { temperature: 0.4, maxTokens: 4000 });
         const parsed = extractJSON(raw);
-        if (!parsed.variants || !parsed.variants.length) throw new Error('No variants');
+        if (!parsed.variants || parsed.variants.length < FIDELITY_STOPS.length) {
+          throw new Error('AI returned ' + (parsed.variants?.length || 0) + ' variants, expected ' + FIDELITY_STOPS.length);
+        }
         state.snapVariants = parsed;
+        state.snapBaseCalories = parsed.base_calories;
         renderSnapResult(parsed);
         flash('✨ AI estimated!');
       } catch (e) {
@@ -1206,10 +1306,40 @@
           </div>
           <textarea id="rIngredients" placeholder="Ingredients (one per line)"></textarea>
           <textarea id="rInstructions" placeholder="Instructions" class="mt-2"></textarea>
+          <div class="mt-2">
+            <label class="btn ghost small block" style="cursor:pointer;">
+              📷 Add photo (optional)
+              <input type="file" id="rPhoto" accept="image/*" style="display:none;">
+            </label>
+            <img id="rPhotoPreview" class="snap-preview hidden" alt="">
+          </div>
           <button class="btn block mt-3" id="saveNewRecipe">Save Recipe</button>
         </div>`;
       document.body.appendChild(modal);
+      let newPhotoData = null;
       modal.querySelector('#closeModal').onclick = () => modal.remove();
+      modal.querySelector('#rPhoto').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const scale = Math.min(600 / img.width, 600 / img.height, 1);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            newPhotoData = canvas.toDataURL('image/jpeg', 0.7);
+            const prev = modal.querySelector('#rPhotoPreview');
+            prev.src = newPhotoData;
+            prev.classList.remove('hidden');
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
       modal.querySelector('#saveNewRecipe').onclick = async () => {
         const name = modal.querySelector('#rName').value.trim();
         if (!name) return flash('⚠️ Name required');
@@ -1221,6 +1351,7 @@
           fat: parseInt(modal.querySelector('#rFat').value) || 0,
           ingredients: modal.querySelector('#rIngredients').value.split('\n').filter(x => x.trim()),
           instructions: modal.querySelector('#rInstructions').value,
+          photo: newPhotoData,
           favorite: false, tags: ['manual'], date: todayKey()
         });
         flash('✅ Recipe added!'); modal.remove();
