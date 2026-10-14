@@ -8,7 +8,7 @@
 <!-- VERSION BOOTSTRAP — runs before everything else -->
 <script>
   (function() {
-    const CURRENT = "4"; // <-- bump this every deploy
+    const CURRENT = "5"; // <-- bump this every deploy
     function checkVersion() {
       fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
         .then(r => r.json())
@@ -44,17 +44,10 @@
   * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; }
   body { background:#0a1628; color:#e2e8f0; padding:0 0 80px; min-height:100vh; }
   :root {
-    --accent:#3b82f6;
-    --accent-dim:#1d4ed8;
-    --accent-glow:rgba(59,130,246,0.15);
-    --bg-card:#0f1e35;
-    --bg-elev:#162a47;
-    --text-muted:#7c93b0;
-    --border:#1e3a5f;
-    --border-light:#2a4a7a;
-    --success:#10b981;
-    --warning:#f59e0b;
-    --danger:#ef4444;
+    --accent:#3b82f6; --accent-dim:#1d4ed8; --accent-glow:rgba(59,130,246,0.15);
+    --bg-card:#0f1e35; --bg-elev:#162a47; --text-muted:#7c93b0;
+    --border:#1e3a5f; --border-light:#2a4a7a;
+    --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
     --purple-grad:linear-gradient(135deg,#6366f1,#4338ca);
     --streak-grad:linear-gradient(135deg,#06b6d4,#3b82f6);
   }
@@ -80,6 +73,8 @@
     padding:12px 14px; border-radius:12px; margin:12px 0; font-size:0.9rem; }
   .danger-banner { background:#2a0f0f; border-left:5px solid var(--danger); color:#fca5a5;
     padding:12px 14px; border-radius:12px; margin:12px 0; font-size:0.9rem; }
+  .info-banner { background:#0f1e35; border-left:5px solid var(--accent); color:#b8c9e0;
+    padding:12px 14px; border-radius:12px; margin:12px 0; font-size:0.85rem; }
   .btn { background:var(--accent); color:#fff; border:none; border-radius:60px; padding:14px 20px;
     font-weight:700; font-size:1rem; cursor:pointer; transition:all 0.15s; display:inline-flex;
     align-items:center; justify-content:center; gap:8px; border:1px solid transparent;
@@ -99,6 +94,7 @@
   textarea { resize:vertical; min-height:80px; }
   .flex-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .flex-between { display:flex; justify-content:space-between; align-items:center; }
+  .flex-col { display:flex; flex-direction:column; gap:10px; }
   .habit-list { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
   .habit-item { display:flex; align-items:center; gap:12px; background:var(--bg-elev); padding:12px 14px;
     border-radius:16px; cursor:pointer; transition:background 0.1s; border:1px solid var(--border); }
@@ -131,8 +127,7 @@
   .snap-preview { max-width:100%; border-radius:16px; margin:10px 0; border:1px solid var(--border);
     max-height:220px; object-fit:cover; width:100%; }
   .tab-bar { position:fixed; bottom:0; left:0; right:0; background:#081020; border-top:1px solid var(--border);
-    display:flex; justify-content:space-around; padding:8px 4px 12px; z-index:100;
-    backdrop-filter:blur(12px); }
+    display:flex; justify-content:space-around; padding:8px 4px 12px; z-index:100; backdrop-filter:blur(12px); }
   .tab-item { display:flex; flex-direction:column; align-items:center; font-size:0.65rem; color:#5a708c;
     gap:2px; padding:6px 10px; border-radius:40px; transition:all 0.1s; cursor:pointer; border:none;
     background:transparent; font-weight:500; flex:1; }
@@ -207,6 +202,15 @@
     margin-bottom:12px; }
   .version-badge { font-size:0.65rem; color:var(--text-muted); padding:2px 8px; border-radius:20px;
     border:1px solid var(--border); }
+  .eat-now-btn-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0; }
+  .eat-now-btn-row .btn.wide { grid-column:span 2; }
+  .satiety-bar { display:flex; align-items:center; gap:8px; margin:8px 0; font-size:0.8rem; color:var(--text-muted); }
+  .satiety-bar-fill { flex:1; height:8px; background:var(--bg-elev); border-radius:20px; overflow:hidden; border:1px solid var(--border); }
+  .satiety-bar-inner { height:100%; background:linear-gradient(90deg,#06b6d4,#10b981); border-radius:20px; }
+  .suggestion-card { background:linear-gradient(135deg,#0d1f3a,#162a47); border:1px solid var(--border-light);
+    border-radius:20px; padding:18px; margin-bottom:16px; }
+  .suggestion-reason { font-size:0.8rem; color:#b8c9e0; font-style:italic; margin:8px 0;
+    padding:8px 12px; background:rgba(59,130,246,0.08); border-radius:10px; border-left:3px solid var(--accent); }
 </style>
 </head>
 <body>
@@ -259,6 +263,27 @@
         <span><strong id="weeklyLoss">0.70</strong> kg/week</span>
       </div>
     </div>
+
+    <!-- EAT NOW PANEL -->
+    <div class="card">
+      <div class="flex-between mb-2">
+        <h3 style="margin:0;">🍽️ Eat Now</h3>
+        <span class="text-muted text-small" id="eatNowClock">—</span>
+      </div>
+      <div class="flex-between text-small mt-1">
+        <span class="text-muted">Remaining today</span>
+        <span><strong id="eatNowRemaining">—</strong> kcal · <strong id="eatNowProteinRemaining">—</strong>g protein</span>
+      </div>
+      <div class="progress-bar-bg mt-2"><div class="progress-bar-fill" id="eatNowProgress" style="width:0%"></div></div>
+      <div class="text-tiny text-muted mt-1" id="eatNowSlotMsg">—</div>
+      <div class="eat-now-btn-row mt-2">
+        <button class="btn secondary small" id="eatNowSuggestBtn">🍽️ What should I eat?</button>
+        <button class="btn secondary small" id="eatNowStarvingBtn">😫 I'm starving</button>
+        <button class="btn secondary small wide" id="eatNowQuickBtn">⚡ Quick & easy</button>
+      </div>
+    </div>
+
+    <div id="eatNowSuggestion"></div>
 
     <div class="card">
       <div class="flex-between"><h3>🔥 Streak</h3><span class="streak-badge" id="streakBadge">0 days</span></div>
@@ -330,6 +355,22 @@
     </div>
 
     <div class="card">
+      <h3>Diet style</h3>
+      <div class="text-tiny text-muted mb-2">All styles produce the same fat loss at the same calories. Pick the one you'll actually stick to.</div>
+      <select id="dietStyle">
+        <option value="balanced">Balanced (default)</option>
+        <option value="high-protein">High protein (2.2g+/kg)</option>
+        <option value="low-carb">Low carb (&lt;100g/day)</option>
+        <option value="keto">Keto (&lt;25g net carbs)</option>
+        <option value="mediterranean">Mediterranean</option>
+        <option value="vegetarian">Vegetarian</option>
+        <option value="if-16-8">Intermittent fasting (16:8)</option>
+        <option value="volume">Volume eating (max fullness)</option>
+      </select>
+      <div id="dietStyleNote" class="info-banner hidden"></div>
+    </div>
+
+    <div class="card">
       <div class="segment-control" id="mealPlanDuration">
         <button class="active" data-days="1">1 Day</button>
         <button data-days="3">3 Days</button>
@@ -337,12 +378,12 @@
       </div>
       <div class="flex-row mt-2">
         <select id="dietPreference" style="flex:1;">
-          <option value="balanced">Balanced</option>
-          <option value="high-protein">High protein</option>
-          <option value="low-carb">Low carb</option>
-          <option value="vegetarian">Vegetarian</option>
-          <option value="mediterranean">Mediterranean</option>
-          <option value="quick">Quick & easy</option>
+          <option value="balanced">Flavour: Balanced</option>
+          <option value="high-protein">Flavour: High protein</option>
+          <option value="low-carb">Flavour: Low carb</option>
+          <option value="vegetarian">Flavour: Vegetarian</option>
+          <option value="mediterranean">Flavour: Mediterranean</option>
+          <option value="quick">Flavour: Quick & easy</option>
         </select>
         <select id="budgetLevel" style="flex:1;">
           <option value="normal">Normal budget</option>
@@ -475,6 +516,8 @@
   const USER = { birthDate: new Date(1998, 1, 4), heightCm: 175, activityFactor: 1.55, goalWeight: 75 };
   const CALORIE_FLOOR = 1500;
   const PROTEIN_PER_KG = 2.2;
+  const WAKE_HOUR = 6;
+  const BED_HOUR = 23;
 
   const FIDELITY_STOPS = [
     { pct: -40, label: '🥗 Extreme cut' },
@@ -487,6 +530,17 @@
   ];
   const TRUE_INDEX = 5;
 
+  const DIET_STYLES = {
+    'balanced':      { name:'Balanced',        note:'Mixed macros, moderate carb, moderate fat, high protein. Easiest to sustain.' },
+    'high-protein':  { name:'High protein',    note:'Protein ≥2.2g/kg. Slight edge for muscle preservation and satiety.' },
+    'low-carb':      { name:'Low carb',        note:'Under 100g/day. Not keto. Same deficit, easier appetite control for some.' },
+    'keto':          { name:'Keto',            note:'Under 25g net carbs. Same fat loss as any deficit — not faster. Watch electrolytes (sodium, magnesium, potassium). Hard on a physical job.' },
+    'mediterranean': { name:'Mediterranean',   note:'Olive oil, fish, legumes, whole grains. Best long-term health outcomes.' },
+    'vegetarian':    { name:'Vegetarian',      note:'No meat. Dairy and eggs ok. Watch protein — aim for 2.2g/kg from varied sources.' },
+    'if-16-8':       { name:'Intermittent fasting 16:8', note:'Eating window 12pm–8pm. Works if you hate breakfast. Total calories still decide fat loss.' },
+    'volume':        { name:'Volume eating',   note:'Max food volume per calorie: vegetables, lean protein, broth, salad. Highest satiety of any style.' }
+  };
+
   // ============ STATE ============
   let state = {
     currentTab: 'today',
@@ -497,6 +551,7 @@
     moodHistory: {},
     mealPlan: null,
     eatenMeals: {},
+    loggedFood: [],            // manual food log entries
     snapImageData: null,
     snapVariants: null,
     snapBaseCalories: null,
@@ -507,7 +562,10 @@
     recipes: [],
     chartRange: 30,
     mealPlanDays: 1,
-    planCalorieTarget: 1840
+    planCalorieTarget: 1840,
+    dietStyle: 'balanced',
+    lastSuggestion: null,
+    lastSuggestionMode: null
   };
 
   // ============ AUTH ============
@@ -545,7 +603,7 @@
       appRoot.classList.remove('hidden');
       await bootApp();
     } else {
-      authOverlay.classList.remove('hidden');
+      authOverlay.classList.add('hidden');
       appRoot.classList.add('hidden');
     }
   });
@@ -610,6 +668,159 @@
     ];
   }
 
+  // ============ EAT NOW ENGINE ============
+  function getCurrentSlot() {
+    const h = new Date().getHours();
+    if (h >= WAKE_HOUR && h < 9)   return { key:'breakfast', label:'Breakfast window (6–9am)',        bias:'Protein-forward, moderate volume' };
+    if (h >= 9 && h < 11)          return { key:'midmorning', label:'Mid-morning (9–11am)',           bias:'Only if under 300 kcal eaten so far' };
+    if (h >= 11 && h < 14)         return { key:'lunch', label:'Lunch window (11am–2pm)',              bias:'Big volume + protein + fibre' };
+    if (h >= 14 && h < 17)         return { key:'afternoon', label:'Afternoon (2–5pm)',                bias:'High-protein, low-cal (Greek yog, cottage cheese)' };
+    if (h >= 17 && h < 20)         return { key:'dinner', label:'Dinner window (5–8pm)',               bias:'Largest meal, most satiety per kcal' };
+    if (h >= 20 && h < BED_HOUR)   return { key:'evening', label:'Evening (8–11pm)',                   bias:'Small, protein-heavy (casein, yoghurt, broth)' };
+    return                                { key:'closed', label:'Kitchen closed',                     bias:'Tea or water only until morning' };
+  }
+
+  function caloriesConsumedToday() {
+    let total = 0;
+    (state.mealPlan?.meals || []).forEach(m => {
+      if (state.eatenMeals[m.id]) total += (m.calories || 0);
+    });
+    state.loggedFood.forEach(f => total += (f.calories || 0));
+    return total;
+  }
+  function proteinConsumedToday() {
+    let total = 0;
+    (state.mealPlan?.meals || []).forEach(m => {
+      if (state.eatenMeals[m.id]) total += (m.protein || 0);
+    });
+    state.loggedFood.forEach(f => total += (f.protein || 0));
+    return total;
+  }
+
+  function updateEatNowPanel() {
+    const slot = getCurrentSlot();
+    const hh = String(new Date().getHours()).padStart(2,'0');
+    const mm = String(new Date().getMinutes()).padStart(2,'0');
+    document.getElementById('eatNowClock').textContent = `${hh}:${mm}`;
+    document.getElementById('eatNowSlotMsg').textContent = slot.label;
+
+    const { target } = getSafeCalorieTarget(state.todayWeight);
+    const proteinTarget = Math.round(state.todayWeight * PROTEIN_PER_KG);
+    const eaten = caloriesConsumedToday();
+    const protEaten = proteinConsumedToday();
+    const remaining = Math.max(0, target - eaten);
+    const protRemaining = Math.max(0, proteinTarget - protEaten);
+
+    document.getElementById('eatNowRemaining').textContent = remaining;
+    document.getElementById('eatNowProteinRemaining').textContent = protRemaining;
+    const pct = target ? Math.min(100, Math.round((eaten / target) * 100)) : 0;
+    document.getElementById('eatNowProgress').style.width = pct + '%';
+  }
+
+  function renderSuggestion(data, mode) {
+    const container = document.getElementById('eatNowSuggestion');
+    const satiety = Math.max(1, Math.min(10, data.satiety_score || 5));
+    container.innerHTML = `
+      <div class="suggestion-card">
+        <div class="flex-between mb-2">
+          <h3 style="margin:0;">${data.name || 'Suggestion'}</h3>
+          <span class="badge">${data.calories} kcal</span>
+        </div>
+        <div class="meal-macros">
+          <span>🥩 ${data.protein}g protein</span>
+          <span>🍚 ${data.carbs}g carbs</span>
+          <span>🥑 ${data.fat}g fat</span>
+        </div>
+        <div class="satiety-bar">
+          <span>Satiety</span>
+          <div class="satiety-bar-fill"><div class="satiety-bar-inner" style="width:${satiety*10}%"></div></div>
+          <strong>${satiety}/10</strong>
+        </div>
+        <div class="suggestion-reason">${data.reason || 'Balanced choice for this slot.'}</div>
+        <p class="text-small mt-2"><strong>Ingredients:</strong> ${(data.ingredients||[]).join(', ')}</p>
+        <p class="text-small mt-2"><strong>Quick instructions:</strong> ${data.instructions||''}</p>
+        ${data.prep_time ? `<p class="text-tiny text-muted mt-2">⏱️ ${data.prep_time} · ${data.difficulty||'easy'}</p>` : ''}
+        <div class="flex-row mt-3">
+          <button class="btn small" id="logSuggestionBtn">✅ Log as eaten</button>
+          <button class="btn secondary small" id="saveSuggestionBtn">💾 Save to Cookbook</button>
+          <button class="btn ghost small" id="dismissSuggestionBtn">✕</button>
+        </div>
+      </div>`;
+
+    document.getElementById('logSuggestionBtn').onclick = async () => {
+      state.loggedFood.push({
+        name: data.name, calories: data.calories, protein: data.protein,
+        carbs: data.carbs, fat: data.fat, time: Date.now()
+      });
+      await saveDailyLog();
+      flash('✅ Logged!');
+      container.innerHTML = '';
+      renderToday();
+      updateEatNowPanel();
+    };
+    document.getElementById('saveSuggestionBtn').onclick = async () => {
+      await db.collection('recipes').add({
+        name: data.name, calories: data.calories, protein: data.protein,
+        carbs: data.carbs, fat: data.fat,
+        ingredients: data.ingredients || [], instructions: data.instructions || '',
+        photo: null, favorite: false, tags: ['ai-suggestion', 'satiety-' + satiety], date: todayKey()
+      });
+      flash('✅ Saved to Cookbook!');
+      await loadFromFirestore(); renderCookbook();
+    };
+    document.getElementById('dismissSuggestionBtn').onclick = () => {
+      container.innerHTML = '';
+      state.lastSuggestion = null;
+    };
+  }
+
+  async function requestEatNowSuggestion(mode) {
+    const slot = getCurrentSlot();
+    if (slot.key === 'closed') {
+      flash('🌙 Kitchen closed — tea or water');
+      return;
+    }
+    const { target } = getSafeCalorieTarget(state.todayWeight);
+    const proteinTarget = Math.round(state.todayWeight * PROTEIN_PER_KG);
+    const eaten = caloriesConsumedToday();
+    const protEaten = proteinConsumedToday();
+    const remaining = Math.max(0, target - eaten);
+    const protRemaining = Math.max(0, proteinTarget - protEaten);
+
+    const container = document.getElementById('eatNowSuggestion');
+    container.innerHTML = `<div class="card text-center"><span class="spinner"></span> <span class="text-muted text-small">Thinking...</span></div>`;
+
+    const styleInfo = DIET_STYLES[state.dietStyle] || DIET_STYLES.balanced;
+    const modeDesc = mode === 'starving' ? 'They are very hungry. Prioritise MAXIMUM satiety (protein, fibre, volume, water content).'
+                     : mode === 'quick'    ? 'They want something quick. Under 15 minutes prep, minimal cooking.'
+                     : 'Standard suggestion. Balance satiety with practicality for the time of day.';
+
+    const systemPrompt = 'You are a nutrition assistant who prioritises satiety science (protein density, fibre, water content, food volume per calorie). Respond ONLY with valid JSON, no markdown fences, no prose.';
+    const userPrompt =
+      `Suggest ONE meal for a 27yo male, 175cm, ${state.todayWeight}kg, physical job on his feet.\n` +
+      `Current time slot: ${slot.label}. Suggestion bias: ${slot.bias}.\n` +
+      `Calories remaining today: ${remaining} kcal. Protein remaining: ${protRemaining}g.\n` +
+      `Diet style: ${styleInfo.name}. ${styleInfo.note}\n` +
+      modeDesc + '\n' +
+      `Rules: do NOT exceed ${remaining} kcal. Prefer high protein. Honest satiety scoring. ` +
+      `Do NOT claim any food "burns fat". Only a calorie deficit burns fat.\n` +
+      `Return JSON exactly: {"name":"...","calories":450,"protein":38,"carbs":40,"fat":12,"satiety_score":8,"reason":"short explanation why this is filling","ingredients":["..."],"instructions":"short prep steps","prep_time":"10 min","difficulty":"easy"}`;
+
+    try {
+      const raw = await callDeepSeek([
+        { role:'system', content: systemPrompt },
+        { role:'user', content: userPrompt }
+      ], { temperature: 0.6, maxTokens: 900 });
+      const parsed = extractJSON(raw);
+      state.lastSuggestion = parsed;
+      state.lastSuggestionMode = mode;
+      renderSuggestion(parsed, mode);
+    } catch (e) {
+      console.error(e);
+      container.innerHTML = `<div class="danger-banner">❌ Couldn't get a suggestion: ${e.message || 'unknown'}</div>`;
+    }
+  }
+
   // ============ FIRESTORE ============
   async function loadFromFirestore() {
     try {
@@ -639,6 +850,8 @@
       state.eatenMeals = log.mealsEaten ? Object.fromEntries(log.mealsEaten.map(id => [id, true])) : {};
       state.waterGlasses = log.water || 0;
       state.mood = log.mood || null;
+      state.loggedFood = log.loggedFood || [];
+      state.dietStyle = log.dietStyle || 'balanced';
       state.moodHistory = {};
       logsSnap.forEach(doc => { if (doc.data().mood) state.moodHistory[doc.id] = doc.data().mood; });
     } catch (e) {
@@ -653,7 +866,8 @@
     try {
       await db.collection('dailyLog').doc(today).set({
         habits: state.habits, mealsEaten, water: state.waterGlasses,
-        mood: state.mood, weight: state.todayWeight
+        mood: state.mood, weight: state.todayWeight,
+        loggedFood: state.loggedFood, dietStyle: state.dietStyle
       }, { merge: true });
     } catch (e) { console.warn('saveDailyLog error', e); }
   }
@@ -773,6 +987,8 @@
     const recentMoods = Object.entries(state.moodHistory).slice(-7)
       .map(([d,m]) => `${d.slice(5)}: ${m}`).join(' · ');
     document.getElementById('moodHistory').textContent = recentMoods || 'No mood logged yet';
+
+    updateEatNowPanel();
   }
 
   function renderMealPlan() {
@@ -1030,9 +1246,18 @@
     }
   }
 
+  function renderDietStyleNote() {
+    const el = document.getElementById('dietStyleNote');
+    const info = DIET_STYLES[state.dietStyle];
+    if (!info) { el.classList.add('hidden'); return; }
+    el.innerHTML = `<strong>${info.name}:</strong> ${info.note}`;
+    el.classList.remove('hidden');
+  }
+
   function renderAll() {
     renderToday(); renderMealPlan(); renderCookbook();
     renderShopping(); renderProgress(); renderPlanSlider();
+    renderDietStyleNote();
   }
 
   // ============ SNAP ============
@@ -1181,6 +1406,19 @@
       };
     });
 
+    // EAT NOW buttons
+    document.getElementById('eatNowSuggestBtn').onclick = () => requestEatNowSuggestion('normal');
+    document.getElementById('eatNowStarvingBtn').onclick = () => requestEatNowSuggestion('starving');
+    document.getElementById('eatNowQuickBtn').onclick = () => requestEatNowSuggestion('quick');
+
+    // Diet style
+    document.getElementById('dietStyle').onchange = async (e) => {
+      state.dietStyle = e.target.value;
+      renderDietStyleNote();
+      await saveDailyLog();
+      flash('Diet style: ' + DIET_STYLES[state.dietStyle].name);
+    };
+
     document.getElementById('planCalorieSlider').oninput = (e) => {
       state.planCalorieTarget = parseInt(e.target.value);
       renderPlanSlider();
@@ -1196,10 +1434,13 @@
         const days = state.mealPlanDays;
         const diet = document.getElementById('dietPreference').value;
         const budget = document.getElementById('budgetLevel').value;
+        const styleInfo = DIET_STYLES[state.dietStyle] || DIET_STYLES.balanced;
         const systemPrompt = 'You are a nutrition assistant. Respond ONLY with valid JSON, no markdown fences, no prose.';
         const userPrompt =
           `Generate a ${days}-day meal plan for a 27yo male, 175cm, ${weight}kg, works a physical job on his feet. ` +
-          `Target ${target} kcal/day, protein ${protein}g/day. Diet style: ${diet}. Budget: ${budget}. ` +
+          `Target ${target} kcal/day, protein ${protein}g/day. Flavour direction: ${diet}. ` +
+          `Diet style: ${styleInfo.name} — ${styleInfo.note} ` +
+          `Budget: ${budget}. ` +
           (target <= 1700
             ? 'This is an aggressive deficit — use high-volume, low-calorie foods and note in each description that taste is sacrificed.'
             : 'This is a moderate deficit — keep meals satisfying.') +
@@ -1434,7 +1675,9 @@
     await loadFromFirestore();
     const { target } = getSafeCalorieTarget(state.todayWeight);
     state.planCalorieTarget = target;
+    document.getElementById('dietStyle').value = state.dietStyle || 'balanced';
     renderAll();
+    setInterval(updateEatNowPanel, 60000);
   }
 })();
 </script>
