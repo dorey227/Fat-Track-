@@ -6,10 +6,9 @@
 <title>CutTrack · Body Fat & Fat Loss</title>
 
 <script>
-  // ---- Version bootstrap (safari-safe) ----
   (function() {
     try {
-      var CURRENT = "8";
+      var CURRENT = "9";
       function checkVersion() {
         try {
           fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -39,7 +38,6 @@
     } catch (e) {}
   })();
 
-  // ---- Global error catcher (shows a banner on screen) ----
   window.__showBootError = function(label, err) {
     try {
       var box = document.getElementById('bootError');
@@ -185,13 +183,13 @@
   .snap-preview { max-width:100%; border-radius:var(--radius-sm); margin:10px 0; border:1px solid var(--border);
     max-height:220px; object-fit:cover; width:100%; }
   .tab-bar { position:fixed; bottom:0; left:0; right:0; background:var(--bg-tabbar); border-top:1px solid var(--border);
-    display:flex; justify-content:space-around; padding:8px 4px 12px; z-index:100; backdrop-filter:blur(12px);
+    display:flex; justify-content:space-around; padding:8px 2px 12px; z-index:100; backdrop-filter:blur(12px);
     -webkit-backdrop-filter:blur(12px); }
-  .tab-item { display:flex; flex-direction:column; align-items:center; font-size:0.6rem; color:var(--text-muted);
-    gap:2px; padding:6px 6px; border-radius:40px; transition:all 0.1s; cursor:pointer; border:none;
+  .tab-item { display:flex; flex-direction:column; align-items:center; font-size:0.55rem; color:var(--text-muted);
+    gap:2px; padding:6px 2px; border-radius:40px; transition:all 0.1s; cursor:pointer; border:none;
     background:transparent; font-weight:500; flex:1; font-family:inherit; }
   .tab-item.active { color:var(--accent); }
-  .tab-item .icon { font-size:1.2rem; line-height:1; }
+  .tab-item .icon { font-size:1.15rem; line-height:1; }
   .flash { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:var(--bg-elev); color:var(--text);
     padding:14px 24px; border-radius:60px; font-weight:600; box-shadow:0 12px 30px rgba(0,0,0,0.7);
     border:1px solid var(--accent); z-index:2000; max-width:90vw; }
@@ -277,13 +275,45 @@
   .theme-option .info strong { display:block; font-size:0.95rem; }
   .theme-option .info .desc { font-size:0.75rem; color:var(--text-muted); }
 
-  /* Meal schedule rows */
   .slot-row { display:flex; align-items:center; gap:8px; padding:10px 12px; background:var(--bg-elev);
     border:1px solid var(--border); border-radius:12px; margin-bottom:8px; }
   .slot-row input[type="time"] { flex:0 0 auto; width:110px; padding:8px 10px; font-size:0.9rem; }
   .slot-row input[type="text"] { flex:1; padding:8px 10px; font-size:0.9rem; }
   .slot-row .slot-del { background:transparent; border:none; color:var(--danger); font-size:1.2rem;
     cursor:pointer; padding:4px 8px; }
+
+  /* CHAT */
+  .chat-wrap { display:flex; flex-direction:column; height:calc(100vh - 220px); min-height:420px; }
+  .chat-messages { flex:1; overflow-y:auto; padding:6px 0 12px; display:flex; flex-direction:column; gap:10px;
+    -webkit-overflow-scrolling:touch; }
+  .chat-msg { max-width:85%; padding:12px 16px; border-radius:18px; font-size:0.9rem; line-height:1.45;
+    word-wrap:break-word; white-space:pre-wrap; }
+  .chat-msg.user { align-self:flex-end; background:var(--accent); color:var(--accent-contrast);
+    border-bottom-right-radius:6px; }
+  .chat-msg.ai { align-self:flex-start; background:var(--bg-elev); color:var(--text);
+    border-bottom-left-radius:6px; border:1px solid var(--border); }
+  .chat-msg.sys { align-self:center; background:transparent; color:var(--text-muted);
+    font-size:0.75rem; text-align:center; padding:6px 12px; }
+  .chat-msg img { display:block; max-width:200px; border-radius:10px; margin-top:8px; }
+  .chat-typing { align-self:flex-start; padding:12px 16px; background:var(--bg-elev); border:1px solid var(--border);
+    border-radius:18px; color:var(--text-muted); font-size:0.9rem; }
+  .chat-input-area { padding-top:10px; border-top:1px solid var(--border); margin-top:8px; }
+  .chat-input-row { display:flex; gap:8px; align-items:center; }
+  .chat-input-row input[type="text"] { flex:1; border-radius:30px; padding:12px 16px; font-size:0.9rem; }
+  .chat-icon-btn { background:var(--bg-elev); border:1px solid var(--border); border-radius:50%;
+    width:44px; height:44px; font-size:1.15rem; cursor:pointer; flex-shrink:0; color:var(--text);
+    display:flex; align-items:center; justify-content:center; padding:0; }
+  .chat-icon-btn.send { background:var(--accent); color:var(--accent-contrast); border-color:var(--accent); }
+  .chat-photo-preview { display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--bg-elev);
+    border:1px solid var(--border); border-radius:12px; margin-top:10px; }
+  .chat-photo-preview img { width:56px; height:56px; border-radius:10px; object-fit:cover; }
+  .chat-photo-preview button { background:transparent; border:none; color:var(--danger); font-size:1.1rem;
+    cursor:pointer; padding:4px 8px; }
+  .chat-quick { display:flex; gap:6px; overflow-x:auto; padding:8px 0; -webkit-overflow-scrolling:touch; }
+  .chat-quick::-webkit-scrollbar { display:none; }
+  .chat-quick button { background:var(--bg-elev); border:1px solid var(--border); color:var(--text-muted);
+    border-radius:20px; padding:7px 14px; font-size:0.78rem; cursor:pointer; white-space:nowrap; font-family:inherit; }
+  .chat-quick button:active { background:var(--accent); color:var(--accent-contrast); }
 </style>
 </head>
 <body class="theme-midnight">
@@ -399,6 +429,31 @@
         <button class="btn ghost small" data-mood="hungry">🍽️ Hungry</button>
       </div>
       <div id="moodHistory" class="text-small text-muted mt-2"></div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="tab-chat" class="tab-panel hidden">
+    <h2>💬 Chat</h2>
+    <div class="chat-wrap">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-area">
+        <div class="chat-quick" id="chatQuick">
+          <button data-q="How am I doing this week?">📊 Weekly review</button>
+          <button data-q="Am I on track to hit my goal?">🎯 Goal check</button>
+          <button data-q="What should I eat right now for max fullness?">🍽️ Filling food</button>
+          <button data-q="Why has my weight stalled?">📉 Stall</button>
+          <button data-q="Am I eating enough protein?">🥩 Protein</button>
+          <button data-q="Clear my chat history">🧹 Clear chat</button>
+        </div>
+        <div id="chatPhotoPreviewWrap"></div>
+        <div class="chat-input-row">
+          <button class="chat-icon-btn" id="chatPhotoBtn" title="Send photo">📷</button>
+          <input type="text" id="chatInput" placeholder="Ask anything or attach a photo...">
+          <button class="chat-icon-btn send" id="chatSendBtn" title="Send">➤</button>
+        </div>
+        <input type="file" id="chatPhotoInput" accept="image/*" style="display:none;">
+      </div>
     </div>
   </div>
 
@@ -612,6 +667,7 @@
 
   <div class="tab-bar">
     <button class="tab-item active" data-tab="today"><span class="icon">☀️</span>Today</button>
+    <button class="tab-item" data-tab="chat"><span class="icon">💬</span>Chat</button>
     <button class="tab-item" data-tab="mealplan"><span class="icon">🍱</span>Plan</button>
     <button class="tab-item" data-tab="cookbook"><span class="icon">📖</span>Cook</button>
     <button class="tab-item" data-tab="shopping"><span class="icon">🛒</span>Shop</button>
@@ -624,7 +680,6 @@
 (function() {
   'use strict';
 
-  // ============ FIREBASE ============
   var firebaseConfig = {
     apiKey: "AIzaSyCP5i2kuGhiR4GmJuFkShm7YbktpSrLS0Q",
     authDomain: "fat-burn-a8afa.firebaseapp.com",
@@ -637,11 +692,11 @@
   var db = firebase.firestore();
   var auth = firebase.auth();
 
-  // ============ CONFIG ============
   var PROXY_URL = 'https://fat-track-neon.vercel.app/api/chat';
   var BASE_USER = { birthDate: new Date(1998, 1, 4), heightCm: 175, activityFactor: 1.55 };
   var CALORIE_FLOOR = 1500;
   var PROTEIN_PER_KG = 2.2;
+  var CHAT_LIMIT = 40;
 
   var FIDELITY_STOPS = [
     { pct: -40, label: '🥗 Extreme cut' },
@@ -671,7 +726,6 @@
     { id:'terminal', name:'Retro Terminal',desc:'Black with phosphor green.', colors:['#0a0a0a','#0f0f0f','#33ff33','#33ff33'] }
   ];
 
-  // Default meal slots matching the user's real schedule
   function defaultSlots() {
     return [
       { time: '04:15', name: 'Pre-work' },
@@ -682,7 +736,6 @@
     ];
   }
 
-  // ============ STATE ============
   var state = {
     currentTab: 'today',
     todayWeight: 80.0,
@@ -709,10 +762,12 @@
     goalWeight: 75,
     wakeTime: '04:00',
     bedTime: '21:00',
-    mealSlots: defaultSlots()
+    mealSlots: defaultSlots(),
+    chatHistory: [],
+    chatPhoto: null,
+    chatBusy: false
   };
 
-  // ============ HELPERS ============
   function $(id) { return document.getElementById(id); }
   function on(id, evt, fn) { var el = $(id); if (el) el.addEventListener(evt, fn); }
   function flash(msg) {
@@ -783,35 +838,27 @@
     ];
   }
 
-  // ============ EAT NOW ============
   function getCurrentSlot() {
     var now = nowMinutes();
     var wake = hhmmToMinutes(state.wakeTime);
     var bed = hhmmToMinutes(state.bedTime);
     if (now < wake) return { key:'closed', label:'Before wake — sleep or pre-fuel', bias:'Kitchen closed' };
     if (now >= bed) return { key:'closed', label:'Kitchen closed', bias:'Tea or water only until morning' };
-
-    // Find the meal slot whose time is closest to now, and describe whether it's
-    // "the next one coming up" or "the one you're in".
     var sorted = state.mealSlots.slice().sort(function(a,b){
       return hhmmToMinutes(a.time) - hhmmToMinutes(b.time);
     });
     if (!sorted.length) return { key:'general', label:'Anytime', bias:'Balanced suggestion' };
-
-    // Find first slot that's > now (next upcoming)
     var next = null, prev = null;
     for (var i = 0; i < sorted.length; i++) {
       var t = hhmmToMinutes(sorted[i].time);
       if (t <= now) prev = sorted[i];
       if (t > now) { next = sorted[i]; break; }
     }
-
-    // If we're within 30 min of a slot, treat it as "in that slot"
     if (prev && (now - hhmmToMinutes(prev.time)) <= 30) {
       return { key:'in-' + prev.name, label: '🍽️ ' + prev.name + ' (' + prev.time + ')', bias:'Meal time — eat now' };
     }
     if (next && (hhmmToMinutes(next.time) - now) <= 30) {
-      return { key:'soon-' + next.name, label: '⏰ ' + next.name + ' soon (' + next.time + ')', bias:'Coming up shortly — prep or start now' };
+      return { key:'soon-' + next.name, label: '⏰ ' + next.name + ' soon (' + next.time + ')', bias:'Coming up shortly' };
     }
     if (prev) {
       return { key:'after-' + prev.name, label: 'Between meals (last: ' + prev.name + ' at ' + prev.time + ')', bias:'Optional snack only if hungry' };
@@ -834,8 +881,8 @@
     try {
       var slot = getCurrentSlot();
       var d = new Date();
-      var hh = String(d.getHours()).padStart(2,'0');
-      var mm = String(d.getMinutes()).padStart(2,'0');
+      var hh = String(d.getHours()); if (hh.length < 2) hh = '0' + hh;
+      var mm = String(d.getMinutes()); if (mm.length < 2) mm = '0' + mm;
       if ($('eatNowClock')) $('eatNowClock').textContent = hh + ':' + mm;
       if ($('eatNowSlotMsg')) $('eatNowSlotMsg').textContent = slot.label;
       var cal = getSafeCalorieTarget(state.todayWeight);
@@ -943,6 +990,215 @@
     });
   }
 
+  // ============ CHAT ============
+  function buildChatContext() {
+    var cal = getSafeCalorieTarget(state.todayWeight);
+    var proteinTarget = Math.round(state.todayWeight * PROTEIN_PER_KG);
+    var eaten = caloriesConsumedToday();
+    var protEaten = proteinConsumedToday();
+    var remaining = Math.max(0, cal.target - eaten);
+    var protRemaining = Math.max(0, proteinTarget - protEaten);
+
+    var recent = state.measurements.slice(-7);
+    var avg7 = recent.length ? (recent.reduce(function(s,m){ return s + m.weight; }, 0) / recent.length).toFixed(1) : 'n/a';
+    var trend7 = 'n/a';
+    if (recent.length >= 2) {
+      trend7 = (recent[recent.length-1].weight - recent[0].weight).toFixed(2) + ' kg over last ' + recent.length + ' logs';
+    }
+    var totalLost = state.measurements.length
+      ? (state.measurements[0].weight - state.measurements[state.measurements.length-1].weight).toFixed(1) : '0';
+
+    var last = state.measurements[state.measurements.length-1];
+    var bfText = 'n/a';
+    if (last && last.waist && last.neck) {
+      var bf = calcBodyFatNavy(last.waist, last.neck, BASE_USER.heightCm);
+      bfText = bf ? bf.toFixed(1) + '%' : 'n/a';
+    }
+
+    var mealsEaten = (state.mealPlan && state.mealPlan.meals || []).filter(function(m){ return state.eatenMeals[m.id]; });
+    var mealsText = mealsEaten.length
+      ? mealsEaten.map(function(m){ return m.name + ' (' + m.calories + 'kcal, ' + m.protein + 'g P)'; }).join('; ')
+      : 'none yet';
+    var loggedText = state.loggedFood.length
+      ? state.loggedFood.map(function(f){ return f.name + ' (' + f.calories + 'kcal)'; }).join('; ')
+      : 'none';
+
+    var habitCount = Object.values(state.habits).filter(Boolean).length;
+
+    var lines = [];
+    lines.push('USER CONTEXT — real live data from their app:');
+    lines.push('- Profile: male, 27yo, 175cm, physical job on feet, no gym training.');
+    lines.push('- Current weight: ' + state.todayWeight + ' kg');
+    lines.push('- Goal weight: ' + state.goalWeight + ' kg');
+    lines.push('- 7-day avg weight: ' + avg7 + ' kg');
+    lines.push('- Weight change over last ' + recent.length + ' logs: ' + trend7);
+    lines.push('- Total lost since tracking began: ' + totalLost + ' kg');
+    lines.push('- Body fat (US Navy, last measured): ' + bfText);
+    lines.push('- Today: target ' + cal.target + ' kcal, protein target ' + proteinTarget + 'g.');
+    lines.push('- Eaten today: ' + eaten + ' kcal / ' + protEaten + 'g protein. Remaining: ' + remaining + ' kcal / ' + protRemaining + 'g protein.');
+    lines.push('- Meals logged from plan today: ' + mealsText);
+    lines.push('- Additional food logged today: ' + loggedText);
+    lines.push('- Habits done today: ' + habitCount + '/5');
+    lines.push('- Water today: ' + state.waterGlasses + '/8 glasses');
+    lines.push('- Mood today: ' + (state.mood || 'not logged'));
+    lines.push('- Current habit streak: ' + calcStreak() + ' days');
+    lines.push('- Diet style: ' + (DIET_STYLES[state.dietStyle] ? DIET_STYLES[state.dietStyle].name : 'Balanced'));
+    lines.push('- Wake time: ' + state.wakeTime + ', bed time: ' + state.bedTime);
+    lines.push('- Current time: ' + new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }));
+    lines.push('');
+    lines.push('RULES:');
+    lines.push('- Be encouraging, honest, specific to their data.');
+    lines.push('- Never encourage crash dieting. Hard floor is ' + CALORIE_FLOOR + ' kcal/day. Safe rate ~0.5-0.7 kg/week.');
+    lines.push('- If they ask about a food, estimate calories/protein honestly from typical portions. If they send a photo, identify it and estimate the real calories.');
+    lines.push('- Keep replies concise — 2-4 short paragraphs max unless they ask for detail.');
+    lines.push('- Never claim any food "burns fat". Only a calorie deficit burns fat.');
+    return lines.join('\n');
+  }
+
+  function renderChat() {
+    try {
+      var el = $('chatMessages');
+      if (!el) return;
+      if (!state.chatHistory.length) {
+        el.innerHTML =
+          '<div class="chat-msg sys">👋 Ask me anything about your progress, your food, or send a photo.</div>' +
+          '<div class="chat-msg sys">I can see your weight, meals, habits, and goals.</div>';
+        return;
+      }
+      var html = '';
+      for (var i = 0; i < state.chatHistory.length; i++) {
+        var m = state.chatHistory[i];
+        var role = m.role === 'user' ? 'user' : 'ai';
+        html += '<div class="chat-msg ' + role + '">';
+        if (m.photo) {
+          html += '<img src="' + m.photo + '" alt="">';
+        }
+        if (m.content) {
+          html += m.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+        html += '</div>';
+      }
+      el.innerHTML = html;
+      el.scrollTop = el.scrollHeight;
+    } catch (e) { console.warn('renderChat', e); }
+  }
+
+  function renderChatPhotoPreview() {
+    var wrap = $('chatPhotoPreviewWrap');
+    if (!wrap) return;
+    if (!state.chatPhoto) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML =
+      '<div class="chat-photo-preview">' +
+        '<img src="' + state.chatPhoto + '" alt="">' +
+        '<span class="text-small text-muted" style="flex:1;">Photo attached</span>' +
+        '<button id="removeChatPhoto" title="Remove">✕</button>' +
+      '</div>';
+    on('removeChatPhoto', 'click', function() {
+      state.chatPhoto = null;
+      renderChatPhotoPreview();
+    });
+  }
+
+  function saveChatHistory() {
+    try {
+      var uid = auth.currentUser.uid;
+      var trimmed = state.chatHistory.slice(-CHAT_LIMIT).map(function(m){
+        // Cap photo size — skip photos older than the last 6 messages to stay under Firestore 1MB doc limit
+        return { role: m.role, content: m.content, photo: null };
+      });
+      db.collection('settings').doc(uid).set({ chatHistory: trimmed }, { merge: true })
+        .catch(function(e){ console.warn('saveChatHistory', e); });
+    } catch (e) { console.warn('saveChatHistory outer', e); }
+  }
+
+  function sendChat(overrideText) {
+    if (state.chatBusy) return;
+    var input = $('chatInput');
+    var text = (overrideText != null ? overrideText : (input ? input.value : '')).trim();
+    var photo = state.chatPhoto;
+    if (!text && !photo) return;
+
+    // Build user message
+    var userMsg = { role:'user', content: text, photo: photo };
+    state.chatHistory.push(userMsg);
+    state.chatPhoto = null;
+    if (input) input.value = '';
+    renderChatPhotoPreview();
+    renderChat();
+
+    // Render typing indicator
+    var el = $('chatMessages');
+    if (el) {
+      var typing = document.createElement('div');
+      typing.className = 'chat-typing';
+      typing.id = 'chatTypingIndicator';
+      typing.textContent = '…';
+      el.appendChild(typing);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    state.chatBusy = true;
+
+    // Build API messages
+    var systemPrompt = buildChatContext();
+    var apiMessages = [{ role:'system', content: systemPrompt }];
+
+    // Include prior context (last 8 turns, no photos to keep payload small)
+    var recentHistory = state.chatHistory.slice(-9, -1);
+    for (var i = 0; i < recentHistory.length; i++) {
+      var m = recentHistory[i];
+      if (m.role === 'user' && m.content) {
+        apiMessages.push({ role:'user', content: m.content });
+      } else if (m.role === 'ai' && m.content) {
+        apiMessages.push({ role:'assistant', content: m.content });
+      }
+    }
+
+    // The current message (with photo if attached)
+    if (photo) {
+      var contentParts = [];
+      if (text) contentParts.push({ type:'text', text: text });
+      else contentParts.push({ type:'text', text: 'What is this, and roughly how many calories and protein does it have? Any suggestions?' });
+      contentParts.push({ type:'image_url', image_url: { url: photo } });
+      apiMessages.push({ role:'user', content: contentParts });
+    } else {
+      apiMessages.push({ role:'user', content: text });
+    }
+
+    callDeepSeek(apiMessages, { temperature: 0.7, maxTokens: 1200 })
+      .then(function(raw){
+        var indicator = $('chatTypingIndicator');
+        if (indicator) indicator.remove();
+        state.chatHistory.push({ role:'ai', content: raw || '(no response)' });
+        state.chatBusy = false;
+        renderChat();
+        saveChatHistory();
+      })
+      .catch(function(e){
+        var indicator = $('chatTypingIndicator');
+        if (indicator) indicator.remove();
+        console.error(e);
+        state.chatHistory.push({ role:'ai', content: '❌ Error: ' + (e.message || 'unknown') });
+        state.chatBusy = false;
+        renderChat();
+      });
+  }
+
+  function attachChatPhotoFromInput() {
+    var inp = $('chatPhotoInput');
+    if (inp) inp.click();
+  }
+
+  function clearChat() {
+    if (!confirm('Clear chat history?')) return;
+    state.chatHistory = [];
+    state.chatPhoto = null;
+    renderChat();
+    renderChatPhotoPreview();
+    saveChatHistory();
+    flash('Chat cleared');
+  }
+
   // ============ FIRESTORE ============
   function loadFromFirestore() {
     var uid = auth.currentUser.uid;
@@ -970,7 +1226,9 @@
       var today = todayKey();
       var log = state.dailyLog[today] || {};
       state.habits = log.habits || {};
-      state.eatenMeals = log.mealsEaten ? Object.fromEntries(log.mealsEaten.map(function(id){ return [id, true]; })) : {};
+      var em = {};
+      if (log.mealsEaten) log.mealsEaten.forEach(function(id){ em[id] = true; });
+      state.eatenMeals = em;
       state.waterGlasses = log.water || 0;
       state.mood = log.mood || null;
       state.loggedFood = log.loggedFood || [];
@@ -984,6 +1242,7 @@
         state.wakeTime = s.wakeTime || '04:00';
         state.bedTime = s.bedTime || '21:00';
         state.mealSlots = (s.mealSlots && s.mealSlots.length) ? s.mealSlots : defaultSlots();
+        state.chatHistory = (s.chatHistory && s.chatHistory.length) ? s.chatHistory : [];
       }
       applyTheme(state.theme);
     }).catch(function(e){
@@ -1022,7 +1281,6 @@
     });
   }
 
-  // ============ DEEPSEEK ============
   function callDeepSeek(messages, opts) {
     opts = opts || {};
     return fetch(PROXY_URL, {
@@ -1054,7 +1312,6 @@
     return JSON.parse(cleaned.slice(start, end + 1));
   }
 
-  // ============ THEME ============
   function applyTheme(id) {
     try {
       document.body.className = 'theme-' + id;
@@ -1087,7 +1344,7 @@
           var id = el.dataset.themeId;
           applyTheme(id);
           saveSettings().then(function(){
-            flash('🎨 ' + THEMES.find(function(x){ return x.id === id; }).name);
+            flash('🎨 ' + THEMES.filter(function(x){ return x.id === id; })[0].name);
             try { renderProgress(); } catch (e) {}
           });
         };
@@ -1095,7 +1352,6 @@
     }
   }
 
-  // ============ RENDER ============
   function renderToday() {
     try {
       var dl = $('todayDateLabel');
@@ -1275,7 +1531,7 @@
   }
 
   function showRecipeModal(id) {
-    var r = state.recipes.find(function(x){ return x.id === id; });
+    var r = state.recipes.filter(function(x){ return x.id === id; })[0];
     if (!r) return;
     var modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -1550,6 +1806,8 @@
 
   function renderAll() {
     try { renderToday(); } catch (e) { console.warn('renderToday', e); }
+    try { renderChat(); } catch (e) { console.warn('renderChat', e); }
+    try { renderChatPhotoPreview(); } catch (e) { console.warn('renderChatPhotoPreview', e); }
     try { renderMealPlan(); } catch (e) { console.warn('renderMealPlan', e); }
     try { renderCookbook(); } catch (e) { console.warn('renderCookbook', e); }
     try { renderShopping(); } catch (e) { console.warn('renderShopping', e); }
@@ -1558,7 +1816,6 @@
     try { renderSettings(); } catch (e) { console.warn('renderSettings', e); }
   }
 
-  // ============ SNAP ============
   function renderSnapResult(data) {
     try {
       var container = $('snapResultContainer');
@@ -1575,7 +1832,7 @@
             '<h3 style="margin:0;">' + (data.dish || 'Identified dish') + '</h3>' +
             '<span class="badge">~' + base + ' kcal in photo</span>' +
           '</div>' +
-          '<div class="text-tiny text-muted">AI estimate of what is actually on the plate. Slide to see how far you want to push the deficit.</div>' +
+          '<div class="text-tiny text-muted">AI estimate. Slide to see how far you want to push the deficit.</div>' +
           '<div class="variant-slider mt-3">' +
             '<input type="range" id="variantSlider" min="0" max="' + (FIDELITY_STOPS.length-1) + '" value="' + TRUE_INDEX + '" step="1">' +
           '</div>' +
@@ -1647,7 +1904,6 @@
     } catch (e) { console.warn('renderSnapResult', e); }
   }
 
-  // ============ INIT ============
   function initTabs() {
     document.querySelectorAll('.tab-item').forEach(function(btn){
       btn.onclick = function() {
@@ -1659,6 +1915,7 @@
         state.currentTab = btn.dataset.tab;
         if (btn.dataset.tab === 'progress') renderProgress();
         if (btn.dataset.tab === 'settings') renderSettings();
+        if (btn.dataset.tab === 'chat') { renderChat(); setTimeout(function(){ var el = $('chatMessages'); if (el) el.scrollTop = el.scrollHeight; }, 50); }
       };
     });
   }
@@ -1697,6 +1954,38 @@
     on('eatNowSuggestBtn', 'click', function(){ requestEatNowSuggestion('normal'); });
     on('eatNowStarvingBtn', 'click', function(){ requestEatNowSuggestion('starving'); });
     on('eatNowQuickBtn', 'click', function(){ requestEatNowSuggestion('quick'); });
+
+    // CHAT handlers
+    on('chatSendBtn', 'click', function(){ sendChat(); });
+    on('chatInput', 'keydown', function(e){ if (e.key === 'Enter') sendChat(); });
+    on('chatPhotoBtn', 'click', function(){ attachChatPhotoFromInput(); });
+    on('chatPhotoInput', 'change', function(e){
+      var file = e.target.files[0]; if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var img = new Image();
+        img.onload = function() {
+          var canvas = document.createElement('canvas');
+          var scale = Math.min(700 / img.width, 700 / img.height, 1);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          state.chatPhoto = canvas.toDataURL('image/jpeg', 0.7);
+          renderChatPhotoPreview();
+          e.target.value = '';
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+    document.querySelectorAll('#chatQuick button').forEach(function(btn){
+      btn.onclick = function() {
+        var q = btn.dataset.q || '';
+        if (q === 'Clear my chat history') { clearChat(); return; }
+        sendChat(q);
+      };
+    });
 
     on('planCalorieSlider', 'input', function(e){
       state.planCalorieTarget = parseInt(e.target.value);
@@ -1935,6 +2224,7 @@
         measurements: state.measurements, dailyLog: state.dailyLog,
         mealPlan: state.mealPlan, recipes: state.recipes,
         shoppingList: state.shoppingList,
+        chatHistory: state.chatHistory,
         settings: { theme: state.theme, dietStyle: state.dietStyle, goalWeight: state.goalWeight,
                     wakeTime: state.wakeTime, bedTime: state.bedTime, mealSlots: state.mealSlots }
       };
@@ -1947,7 +2237,6 @@
     });
   }
 
-  // ============ AUTH BUTTONS ============
   on('googleSignInBtn', 'click', function() {
     if ($('authError')) $('authError').classList.add('hidden');
     var provider = new firebase.auth.GoogleAuthProvider();
@@ -1993,7 +2282,6 @@
   });
   auth.getRedirectResult().catch(function(e){ console.warn('Redirect result:', e); });
 
-  // ============ BOOT ============
   var appBooted = false;
   function bootApp(uid) {
     if (appBooted) return Promise.resolve();
